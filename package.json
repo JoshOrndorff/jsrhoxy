@@ -1,0 +1,24 @@
+{
+  "name": "rhoxy",
+  "version": "0.0.1",
+  "description": "A Rholang interpreter in javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "rholang",
+    "rhoxy",
+    "concurrency",
+    "rho-calculus",
+    "pi-calculus"
+  ],
+  "author": "Joshy Orndorff",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "@masala/parser": "^0.7.0"
+  },
+  "devDependencies": {
+    "jest": "^24.1.0"
+  }
+}
