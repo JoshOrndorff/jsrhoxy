@@ -1,31 +1,26 @@
-const {Streams} = require('@masala/parser');
-const {nilParser, procParser, sendParser} = require('../index');
+const nearley = require("nearley");
+const grammar = require("../rhoxyGrammar.js");
+const nilAst = {
+  tag: "ground",
+  type: 'nil',
+  val: "Nil",
+};
 
 // Tests for nil parser
 test('Parses solo Nil', () => {
-  const expected = {
-    tag: "Ground",
-    value: "Nil",
-  }
-  const actual = nilParser().parse(Streams.ofString("Nil"));
-
-  expect(actual.value).toEqual(expected);
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("Nil");
+  expect(parser.results[0]).toEqual(nilAst);
 });
 
 // Tests for send parser
-// TODO make this pass https://github.com/d-plaindoux/masala-parser
 test('Basic Nil Send', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("@Nil!(Nil)");
   const expected = {
     tag: "send",
-    chan: {
-      tag: "Ground",
-      value: "Nil",
-    },
-    msg: {
-      tag: "Ground",
-      value: "Nil",
-    },
+    chan: nilAst,
+    message: nilAst,
   };
-  const actual = sendParser().parse(Streams.ofString("@Nil!(Nil)"));
-  expect(actual.value).toEqual(expected);
+  expect(parser.results[0]).toEqual(expected);
 });
