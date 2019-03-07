@@ -24,17 +24,29 @@ var grammar = {
           message
         }) },
     {"name": "proc$string$2", "symbols": [{"literal":"f"}, {"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc$string$3", "symbols": [{"literal":"v"}, {"literal":"a"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc$string$4", "symbols": [{"literal":"<"}, {"literal":"-"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$2", "_", {"literal":"("}, "_", "proc$string$3", "_", "proc$string$4", "_", "chan", "_", {"literal":")"}, "_", {"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess":  ([,,,,givenName,,,,chan,,,,,,body,,]) => ({
+    {"name": "proc", "symbols": ["proc$string$2", "_", {"literal":"("}, "_", "actions", "_", {"literal":")"}, "_", {"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess":  ([,,,,actions,,,,,,body,,]) => ({
           tag: 'join',
-          binds: {
-            givenName,
-            chan
-          },
+          actions,
           body
         }) },
-    {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c}
+    {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
+    {"name": "actions", "symbols": ["action"]},
+    {"name": "actions", "symbols": ["action", "_", {"literal":";"}, "_", "actions"], "postprocess":  ([action,,,,actions]) =>
+        actions.concat([action])
+               },
+    {"name": "action$string$1", "symbols": [{"literal":"<"}, {"literal":"-"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "action", "symbols": ["_", "pattern", "_", "action$string$1", "_", "chan", "_"], "postprocess":  ([,pattern,,,,chan,]) => ({
+          tag: "action",
+          pattern,
+          chan
+        }) },
+    {"name": "pattern", "symbols": ["variable"], "postprocess": id},
+    {"name": "variable$ebnf$1", "symbols": []},
+    {"name": "variable$ebnf$1", "symbols": ["variable$ebnf$1", /[a-zA-Z0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "variable", "symbols": [/[a-zA-Z]/, "variable$ebnf$1"], "postprocess":  ([n, ame]) => ({
+          tag: "variable",
+          givenName: n + ame.join('')
+        }) }
 ]
   , ParserStart: "proc"
 }

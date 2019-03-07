@@ -1,5 +1,7 @@
 @builtin "whitespace.ne"
 
+# Apparently, the top-level thing should always be the first parse rule
+
 
 proc ->
     "Nil"
@@ -8,27 +10,48 @@ proc ->
         type: "nil",
         val: "Nil"
       }) %}
+
   | chan _ "!" _ "(" _ proc _ ")"
       {% ([chan,,,,,,message,,]) => ({
         tag: 'send',
         chan,
         message
       }) %}
-  ####### TODO rewrite this in terms of a more general join
-  | "for" _ "(" _ "var" _ "<-" _ chan _ ")" _ "{" _ proc _ "}"
-      {% ([,,,,givenName,,,,chan,,,,,,body,,]) => ({
+
+  | "for" _ "(" _ actions _ ")" _ "{" _ proc _ "}"
+      {% ([,,,,actions,,,,,,body,,]) => ({
         tag: 'join',
-        binds: {
-          givenName,
-          chan
-        },
+        actions,
         body
       }) %}
 
 chan -> "@" proc {% ([,c]) => c %}
 
-#actions -> actions ";" action
 
-#action -> _ var _ "<-" _ chan _
+actions ->
+    action # Don't manually put this in a list {% d => [d] %}
+           # Parsers always return a one-deeper list
+  # TODO multiple actions doesn't seem to work yet. Ambiguous grammar.
+  # nearley-test rhoxyGrammar.js --input "x <- @Nil; y <- @Nil"
+  | action _ ";" _ actions
+      {% ([action,,,,actions]) =>
+        actions.concat([action])
+       %}
 
-#var -> [a-zA-Z][a-zA-Z0-9]:*
+
+action -> _ pattern _ "<-" _ chan _
+  {% ([,pattern,,,,chan,]) => ({
+    tag: "action",
+    pattern,
+    chan
+  }) %}
+
+# TODO right now the only kind of pattern is a simple variable
+pattern -> variable {% id %}
+
+variable ->
+  [a-zA-Z] [a-zA-Z0-9]:*
+    {% ([n, ame]) => ({
+      tag: "variable",
+      givenName: n + ame.join('')
+    }) %}
