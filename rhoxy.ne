@@ -2,7 +2,7 @@
 
 # Apparently, the top-level thing should always be the first parse rule
 
-main -> proc {% id %}
+main -> _ proc _ {% ([,p,]) => p %}
 
 proc ->
     "Nil"

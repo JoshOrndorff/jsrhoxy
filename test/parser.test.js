@@ -24,6 +24,13 @@ test('Simple Nil', () => {
   expect(parser.results[0]).toEqual(nilAst);
 });
 
+test('Nil w/ whitespace', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("    Nil \t ");
+
+  expect(parser.results[0]).toEqual(nilAst);
+});
+
 // Tests for send parser
 test('Basic Send', () => {
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
@@ -132,3 +139,18 @@ test('Three-Nil Par', () => {
   expect(parser.results[0]).toEqual(expected);
 });
 
+test('Par w/ whitespace', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("Nil |\nNil |\nNil");
+
+  const expected = {
+    tag: "par",
+    procs: [
+      nilAst,
+      nilAst,
+      nilAst
+    ]
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+});
