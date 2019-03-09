@@ -10,6 +10,11 @@ const nilAst = {
   type: 'nil',
   val: "Nil",
 };
+const sendAst = {
+  tag: "send",
+  chan: nilAst,
+  message: nilAst,
+};
 
 // Tests for nil parser
 test('Simple Nil', () => {
@@ -24,13 +29,7 @@ test('Basic Send', () => {
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("@Nil!(Nil)");
 
-  const expected = {
-    tag: "send",
-    chan: nilAst,
-    message: nilAst,
-  };
-
-  expect(parser.results[0]).toEqual(expected);
+  expect(parser.results[0]).toEqual(sendAst);
 });
 
 // Tests for receive parser
@@ -55,3 +54,51 @@ test('Basic Receive', () => {
 
   expect(parser.results[0]).toEqual(expected);
 });
+
+// Tests for par parser
+test('Basic Par', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("Nil|Nil");
+
+  const expected = {
+    tag: "par",
+    procs: [
+      nilAst,
+      nilAst
+    ]
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+test('Send | Nil', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("@Nil!(Nil)|Nil");
+
+  const expected = {
+    tag: "par",
+    procs: [
+      sendAst,
+      nilAst
+    ]
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+test('Three-Nil Par', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("Nil|Nil|Nil");
+
+  const expected = {
+    tag: "par",
+    procs: [
+      nilAst,
+      nilAst,
+      nilAst
+    ]
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+});
+

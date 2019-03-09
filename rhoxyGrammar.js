@@ -12,6 +12,7 @@ var grammar = {
     {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", "wschar"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "__", "symbols": ["__$ebnf$1"], "postprocess": function(d) {return null;}},
     {"name": "wschar", "symbols": [/[ \t\n\v\f]/], "postprocess": id},
+    {"name": "main", "symbols": ["proc"], "postprocess": id},
     {"name": "proc$string$1", "symbols": [{"literal":"N"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "proc", "symbols": ["proc$string$1"], "postprocess":  ([_]) => ({
           tag: "ground",
@@ -29,6 +30,14 @@ var grammar = {
           actions,
           body
         }) },
+    {"name": "proc", "symbols": ["proc", "_", {"literal":"|"}, "_", "proc"], "postprocess":  ([p1,,,,p2]) => {
+          ps1 = p1.tag === "par" ? p1.procs : [p1]
+          ps2 = p2.tag === "par" ? p2.procs : [p2]
+          return {
+            tag: "par",
+            procs: ps1.concat(ps2)
+          }
+        } },
     {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
     {"name": "actions", "symbols": ["action"]},
     {"name": "actions", "symbols": ["action", "_", {"literal":";"}, "_", "actions"], "postprocess":  ([action,,,,actions]) =>
@@ -48,7 +57,7 @@ var grammar = {
           givenName: n + ame.join('')
         }) }
 ]
-  , ParserStart: "proc"
+  , ParserStart: "main"
 }
 if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
    module.exports = grammar;

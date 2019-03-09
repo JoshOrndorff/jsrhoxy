@@ -2,6 +2,7 @@
 
 # Apparently, the top-level thing should always be the first parse rule
 
+main -> proc {% id %}
 
 proc ->
     "Nil"
@@ -24,6 +25,14 @@ proc ->
         actions,
         body
       }) %}
+  | proc _ "|" _ proc {% ([p1,,,,p2]) => {
+    ps1 = p1.tag === "par" ? p1.procs : [p1]
+    ps2 = p2.tag === "par" ? p2.procs : [p2]
+    return {
+      tag: "par",
+      procs: ps1.concat(ps2)
+    }
+  } %}
 
 chan -> "@" proc {% ([,c]) => c %}
 
