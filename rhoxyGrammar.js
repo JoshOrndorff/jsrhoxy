@@ -40,7 +40,7 @@ var grammar = {
         } },
     {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
     {"name": "actions", "symbols": ["action"]},
-    {"name": "actions", "symbols": ["action", "_", {"literal":";"}, "_", "actions"], "postprocess":  ([action,,,,actions]) =>
+    {"name": "actions", "symbols": ["actions", "_", {"literal":";"}, "_", "action"], "postprocess":  ([actions,,,,action]) =>
         actions.concat([action])
                },
     {"name": "action$string$1", "symbols": [{"literal":"<"}, {"literal":"-"}], "postprocess": function joiner(d) {return d.join('');}},

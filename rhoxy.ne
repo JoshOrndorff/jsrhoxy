@@ -42,8 +42,8 @@ actions ->
            # Parsers always return a one-deeper list
   # TODO multiple actions doesn't seem to work yet. Ambiguous grammar.
   # nearley-test rhoxyGrammar.js --input "x <- @Nil; y <- @Nil"
-  | action _ ";" _ actions
-      {% ([action,,,,actions]) =>
+  | actions _ ";" _ action
+      {% ([actions,,,,action]) =>
         actions.concat([action])
        %}
 

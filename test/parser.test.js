@@ -32,7 +32,7 @@ test('Basic Send', () => {
   expect(parser.results[0]).toEqual(sendAst);
 });
 
-// Tests for receive parser
+// Tests for join parser
 test('Basic Receive', () => {
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("for(x <- @Nil){Nil}");
@@ -45,6 +45,36 @@ test('Basic Receive', () => {
         pattern: {
           tag: "variable",
           givenName: "x"
+        },
+        chan: nilAst
+      }
+    ],
+    body: nilAst,
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+test('two-action join', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("for(x <- @Nil ; y <- @Nil){Nil}");
+
+  const expected = {
+    tag: "join",
+    actions: [
+      {
+        tag: "action",
+        pattern: {
+          tag: "variable",
+          givenName: "x"
+        },
+        chan: nilAst
+      },
+      {
+        tag: "action",
+        pattern: {
+          tag: "variable",
+          givenName: "y"
         },
         chan: nilAst
       }
