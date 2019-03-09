@@ -2,6 +2,21 @@
 // http://github.com/Hardmath123/nearley
 (function () {
 function id(x) { return x[0]; }
+
+function groundTree(type, value) {
+  return {
+    tag: "ground",
+    type,
+    value
+  }
+}
+
+
+const actionTree = ([,pattern,,,,chan,]) => ({
+  tag: "action",
+  pattern,
+  chan
+})
 var grammar = {
     Lexer: undefined,
     ParserRules: [
@@ -12,20 +27,109 @@ var grammar = {
     {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", "wschar"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "__", "symbols": ["__$ebnf$1"], "postprocess": function(d) {return null;}},
     {"name": "wschar", "symbols": [/[ \t\n\v\f]/], "postprocess": id},
+    {"name": "unsigned_int$ebnf$1", "symbols": [/[0-9]/]},
+    {"name": "unsigned_int$ebnf$1", "symbols": ["unsigned_int$ebnf$1", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "unsigned_int", "symbols": ["unsigned_int$ebnf$1"], "postprocess": 
+        function(d) {
+            return parseInt(d[0].join(""));
+        }
+        },
+    {"name": "int$ebnf$1$subexpression$1", "symbols": [{"literal":"-"}]},
+    {"name": "int$ebnf$1$subexpression$1", "symbols": [{"literal":"+"}]},
+    {"name": "int$ebnf$1", "symbols": ["int$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "int$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "int$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "int$ebnf$2", "symbols": ["int$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "int", "symbols": ["int$ebnf$1", "int$ebnf$2"], "postprocess": 
+        function(d) {
+            if (d[0]) {
+                return parseInt(d[0][0]+d[1].join(""));
+            } else {
+                return parseInt(d[1].join(""));
+            }
+        }
+        },
+    {"name": "unsigned_decimal$ebnf$1", "symbols": [/[0-9]/]},
+    {"name": "unsigned_decimal$ebnf$1", "symbols": ["unsigned_decimal$ebnf$1", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "unsigned_decimal$ebnf$2$subexpression$1$ebnf$1", "symbols": [/[0-9]/]},
+    {"name": "unsigned_decimal$ebnf$2$subexpression$1$ebnf$1", "symbols": ["unsigned_decimal$ebnf$2$subexpression$1$ebnf$1", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "unsigned_decimal$ebnf$2$subexpression$1", "symbols": [{"literal":"."}, "unsigned_decimal$ebnf$2$subexpression$1$ebnf$1"]},
+    {"name": "unsigned_decimal$ebnf$2", "symbols": ["unsigned_decimal$ebnf$2$subexpression$1"], "postprocess": id},
+    {"name": "unsigned_decimal$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "unsigned_decimal", "symbols": ["unsigned_decimal$ebnf$1", "unsigned_decimal$ebnf$2"], "postprocess": 
+        function(d) {
+            return parseFloat(
+                d[0].join("") +
+                (d[1] ? "."+d[1][1].join("") : "")
+            );
+        }
+        },
+    {"name": "decimal$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "decimal$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "decimal$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "decimal$ebnf$2", "symbols": ["decimal$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "decimal$ebnf$3$subexpression$1$ebnf$1", "symbols": [/[0-9]/]},
+    {"name": "decimal$ebnf$3$subexpression$1$ebnf$1", "symbols": ["decimal$ebnf$3$subexpression$1$ebnf$1", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "decimal$ebnf$3$subexpression$1", "symbols": [{"literal":"."}, "decimal$ebnf$3$subexpression$1$ebnf$1"]},
+    {"name": "decimal$ebnf$3", "symbols": ["decimal$ebnf$3$subexpression$1"], "postprocess": id},
+    {"name": "decimal$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "decimal", "symbols": ["decimal$ebnf$1", "decimal$ebnf$2", "decimal$ebnf$3"], "postprocess": 
+        function(d) {
+            return parseFloat(
+                (d[0] || "") +
+                d[1].join("") +
+                (d[2] ? "."+d[2][1].join("") : "")
+            );
+        }
+        },
+    {"name": "percentage", "symbols": ["decimal", {"literal":"%"}], "postprocess": 
+        function(d) {
+            return d[0]/100;
+        }
+        },
+    {"name": "jsonfloat$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "jsonfloat$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "jsonfloat$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "jsonfloat$ebnf$2", "symbols": ["jsonfloat$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "jsonfloat$ebnf$3$subexpression$1$ebnf$1", "symbols": [/[0-9]/]},
+    {"name": "jsonfloat$ebnf$3$subexpression$1$ebnf$1", "symbols": ["jsonfloat$ebnf$3$subexpression$1$ebnf$1", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "jsonfloat$ebnf$3$subexpression$1", "symbols": [{"literal":"."}, "jsonfloat$ebnf$3$subexpression$1$ebnf$1"]},
+    {"name": "jsonfloat$ebnf$3", "symbols": ["jsonfloat$ebnf$3$subexpression$1"], "postprocess": id},
+    {"name": "jsonfloat$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "jsonfloat$ebnf$4$subexpression$1$ebnf$1", "symbols": [/[+-]/], "postprocess": id},
+    {"name": "jsonfloat$ebnf$4$subexpression$1$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "jsonfloat$ebnf$4$subexpression$1$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "jsonfloat$ebnf$4$subexpression$1$ebnf$2", "symbols": ["jsonfloat$ebnf$4$subexpression$1$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "jsonfloat$ebnf$4$subexpression$1", "symbols": [/[eE]/, "jsonfloat$ebnf$4$subexpression$1$ebnf$1", "jsonfloat$ebnf$4$subexpression$1$ebnf$2"]},
+    {"name": "jsonfloat$ebnf$4", "symbols": ["jsonfloat$ebnf$4$subexpression$1"], "postprocess": id},
+    {"name": "jsonfloat$ebnf$4", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "jsonfloat", "symbols": ["jsonfloat$ebnf$1", "jsonfloat$ebnf$2", "jsonfloat$ebnf$3", "jsonfloat$ebnf$4"], "postprocess": 
+        function(d) {
+            return parseFloat(
+                (d[0] || "") +
+                d[1].join("") +
+                (d[2] ? "."+d[2][1].join("") : "") +
+                (d[3] ? "e" + (d[3][1] || "+") + d[3][2].join("") : "")
+            );
+        }
+        },
+    {"name": "ground$string$1", "symbols": [{"literal":"N"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "ground", "symbols": ["ground$string$1"], "postprocess": d => groundTree("nil", "Nil")},
+    {"name": "ground", "symbols": ["int"], "postprocess": d => groundTree("int", d[0])},
+    {"name": "ground", "symbols": ["bool"], "postprocess": d => groundTree("bool", d[0])},
+    {"name": "bool$string$1", "symbols": [{"literal":"t"}, {"literal":"r"}, {"literal":"u"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "bool", "symbols": ["bool$string$1"], "postprocess": () => true},
+    {"name": "bool$string$2", "symbols": [{"literal":"f"}, {"literal":"a"}, {"literal":"l"}, {"literal":"s"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "bool", "symbols": ["bool$string$2"], "postprocess": () => false},
     {"name": "main", "symbols": ["_", "proc", "_"], "postprocess": ([,p,]) => p},
-    {"name": "proc$string$1", "symbols": [{"literal":"N"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$1"], "postprocess":  ([_]) => ({
-          tag: "ground",
-          type: "nil",
-          val: "Nil"
-        }) },
+    {"name": "proc", "symbols": ["ground"], "postprocess": id},
     {"name": "proc", "symbols": ["chan", "_", {"literal":"!"}, "_", {"literal":"("}, "_", "proc", "_", {"literal":")"}], "postprocess":  ([chan,,,,,,message,,]) => ({
           tag: 'send',
           chan,
           message
         }) },
-    {"name": "proc$string$2", "symbols": [{"literal":"f"}, {"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$2", "_", {"literal":"("}, "_", "actions", "_", {"literal":")"}, "_", {"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess":  ([,,,,actions,,,,,,body,,]) => ({
+    {"name": "proc$string$1", "symbols": [{"literal":"f"}, {"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc", "symbols": ["proc$string$1", "_", {"literal":"("}, "_", "actions", "_", {"literal":")"}, "_", {"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess":  ([,,,,actions,,,,,,body,,]) => ({
           tag: 'join',
           actions,
           body
@@ -38,8 +142,8 @@ var grammar = {
             procs: ps1.concat(ps2)
           }
         } },
-    {"name": "proc$string$3", "symbols": [{"literal":"b"}, {"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"l"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$3", "_", {"literal":"{"}, "proc", {"literal":"}"}], "postprocess":  ([,,,proc,]) => ({
+    {"name": "proc$string$2", "symbols": [{"literal":"b"}, {"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"l"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc", "symbols": ["proc$string$2", "_", {"literal":"{"}, "proc", {"literal":"}"}], "postprocess":  ([,,,proc,]) => ({
           tag: "bundle",
           proc
         }) },
@@ -49,11 +153,7 @@ var grammar = {
         actions.concat([action])
                },
     {"name": "action$string$1", "symbols": [{"literal":"<"}, {"literal":"-"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "action", "symbols": ["_", "pattern", "_", "action$string$1", "_", "chan", "_"], "postprocess":  ([,pattern,,,,chan,]) => ({
-          tag: "action",
-          pattern,
-          chan
-        }) },
+    {"name": "action", "symbols": ["_", "pattern", "_", "action$string$1", "_", "chan", "_"], "postprocess": actionTree},
     {"name": "pattern", "symbols": ["variable"], "postprocess": id},
     {"name": "variable$ebnf$1", "symbols": []},
     {"name": "variable$ebnf$1", "symbols": ["variable$ebnf$1", /[a-zA-Z0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},

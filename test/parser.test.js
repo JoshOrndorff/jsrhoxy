@@ -8,7 +8,7 @@ const grammar = require("../rhoxyGrammar.js");
 const nilAst = {
   tag: "ground",
   type: 'nil',
-  val: "Nil",
+  value: "Nil",
 };
 const sendAst = {
   tag: "send",
@@ -31,12 +31,100 @@ test('Nil w/ whitespace', () => {
   expect(parser.results[0]).toEqual(nilAst);
 });
 
+// Tests for int parser
+test('Simple int', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("23");
+
+  const expected = {
+    tag: "ground",
+    type: "int",
+    value: 23
+  }
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+test('Positive int', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("+4132");
+
+  const expected = {
+    tag: "ground",
+    type: "int",
+    value: 4132
+  }
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+test('Negative int', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("-32");
+
+  const expected = {
+    tag: "ground",
+    type: "int",
+    value: -32
+  }
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+// Tests for bool parser
+test('true', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed(" true\n");
+
+  const expected = {
+    tag: "ground",
+    type: "bool",
+    value: true
+  }
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+test('false', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("\tfalse");
+
+  const expected = {
+    tag: "ground",
+    type: "bool",
+    value: false
+  }
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
 // Tests for send parser
 test('Basic Send', () => {
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("@Nil!(Nil)");
 
   expect(parser.results[0]).toEqual(sendAst);
+});
+
+test('Send w/ grounds', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("@4 ! (false)");
+
+  const expected = {
+    tag: "send",
+    chan: {
+      tag: "ground",
+      type: "int",
+      value: 4
+    },
+    message: {
+      tag: "ground",
+      type: "bool",
+      value: false
+    }
+  };
+
+  expect(parser.results[0]).toEqual(expected);
 });
 
 // Tests for join parser

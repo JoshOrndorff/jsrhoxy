@@ -1,17 +1,11 @@
 @builtin "whitespace.ne"
+@include "ground.ne"
 
 # Apparently, the top-level thing should always be the first parse rule
-
 main -> _ proc _ {% ([,p,]) => p %}
 
 proc ->
-    "Nil"
-      {% ([_]) => ({
-        tag: "ground",
-        type: "nil",
-        val: "Nil"
-      }) %}
-
+    ground {% id %}
   | chan _ "!" _ "(" _ proc _ ")"
       {% ([chan,,,,,,message,,]) => ({
         tag: 'send',
