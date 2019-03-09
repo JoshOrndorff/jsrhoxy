@@ -25,14 +25,21 @@ proc ->
         actions,
         body
       }) %}
-  | proc _ "|" _ proc {% ([p1,,,,p2]) => {
-    ps1 = p1.tag === "par" ? p1.procs : [p1]
-    ps2 = p2.tag === "par" ? p2.procs : [p2]
-    return {
-      tag: "par",
-      procs: ps1.concat(ps2)
-    }
-  } %}
+  | proc _ "|" _ proc
+      {% ([p1,,,,p2]) => {
+        ps1 = p1.tag === "par" ? p1.procs : [p1]
+        ps2 = p2.tag === "par" ? p2.procs : [p2]
+        return {
+          tag: "par",
+          procs: ps1.concat(ps2)
+        }
+      } %}
+  | "bundle" _ "{" proc "}"
+      # For now bundles are only to prevent destructuring. Not read-write restriction.
+      {% ([,,,proc,]) => ({
+        tag: "bundle",
+        proc
+      }) %}
 
 chan -> "@" proc {% ([,c]) => c %}
 

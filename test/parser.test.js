@@ -154,3 +154,29 @@ test('Par w/ whitespace', () => {
 
   expect(parser.results[0]).toEqual(expected);
 });
+
+// Tests for bundle parser
+test('Basic Bundle', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("bundle{Nil}");
+
+  const expected = {
+    tag: "bundle",
+    proc: nilAst
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+// Tests for bundle parser
+test('Bundle w/ space', () => {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed("bundle {Nil}");
+
+  const expected = {
+    tag: "bundle",
+    proc: nilAst
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+});

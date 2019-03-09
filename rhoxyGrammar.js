@@ -12,7 +12,7 @@ var grammar = {
     {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", "wschar"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "__", "symbols": ["__$ebnf$1"], "postprocess": function(d) {return null;}},
     {"name": "wschar", "symbols": [/[ \t\n\v\f]/], "postprocess": id},
-    {"name": "main", "symbols": ["actions"]},
+    {"name": "main", "symbols": ["_", "proc", "_"], "postprocess": ([,p,]) => p},
     {"name": "proc$string$1", "symbols": [{"literal":"N"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "proc", "symbols": ["proc$string$1"], "postprocess":  ([_]) => ({
           tag: "ground",
@@ -38,6 +38,11 @@ var grammar = {
             procs: ps1.concat(ps2)
           }
         } },
+    {"name": "proc$string$3", "symbols": [{"literal":"b"}, {"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"l"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc", "symbols": ["proc$string$3", "_", {"literal":"{"}, "proc", {"literal":"}"}], "postprocess":  ([,,,proc,]) => ({
+          tag: "bundle",
+          proc
+        }) },
     {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
     {"name": "actions", "symbols": ["action"]},
     {"name": "actions", "symbols": ["actions", "_", {"literal":";"}, "_", "action"], "postprocess":  ([actions,,,,action]) =>
