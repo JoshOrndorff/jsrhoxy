@@ -74,24 +74,46 @@ function parIn(ts, env, randomState, term) {
 
     case "ground":
       return ts;
-      break;
 
     case "bundle":
       return parIn(ts, env, randomState, term.proc);
-      break;
 
-    case "send":
+    //TODO At some point around here, I need to actually look
+    // up values in environments. At least the channels should be fully subbed in.
+    // Or maybe sends coming in here should already be fully concretified?
+    case "send": {
       term.env = env;
       let poststate = {};
-      poststate.procs = ts.procs.add(randomState, term);
-      poststate.sends = ts.sends;
-      poststate.sends[term.channel].add(randomState);
+      poststate.procs = ts.procs.set(randomState, term);
+      if (ts.sends.has(term.chan)) {
+        poststate.sends = ts.sends.set(term.chan, ts.sends.get(term.chan).add(randomState));
+      }
+      else {
+        poststate.sends = ts.sends.set(term.chan, Set([randomState]));
+      }
       poststate.joins = ts.joins;
       return poststate;
+    }
 
-    case "join":
-      //TODO
-      break;
+    case "join": {
+      term.env = env;
+      let poststate = {};
+      poststate.procs = ts.procs.set(randomState, term);
+      poststate.sends = ts.sends;
+      poststate.joins = ts.joins;
+
+      // Now go through and put each channel in the map
+      for (let {chan} of term.actions) {
+        if (ts.joins.has(chan)) {
+          poststate.joins = ts.joins.set(chan, ts.sends.get(chan).add(randomState));
+        }
+        else {
+          poststate.sends = ts.sends.set(chan, Set([randomState]));
+        }
+      }
+
+      return poststate;
+    }
 
     case "par":
       //TODO

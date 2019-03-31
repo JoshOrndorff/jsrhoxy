@@ -1,20 +1,9 @@
 const nearley = require("nearley");
 const grammar = require("../rhoxyGrammar.js");
+const { nilAst, sendAst } = require('./trees.js');
 
 // TODO setup method? I would rather construct the parser object
 // there than in each test.
-
-// Basic trees to use repeatedly
-const nilAst = {
-  tag: "ground",
-  type: 'nil',
-  value: "Nil",
-};
-const sendAst = {
-  tag: "send",
-  chan: nilAst,
-  message: nilAst,
-};
 
 // Tests for nil parser
 test('Simple Nil', () => {
