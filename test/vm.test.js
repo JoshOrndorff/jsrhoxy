@@ -84,6 +84,25 @@ test('Par in a Par of two sends', () => {
   expect(ts2.joins.count()).toEqual(0);
 });
 
+test('Par in a send inside a new', () => {
+  const ts = rhoVM.fresh();
+
+  const newSendAst = {
+    tag: "new",
+    vars: [{
+      tag: "variable",
+      givenName: "x",
+    }],
+    body: sendAst,
+  }
+
+  const ts2 = rhoVM.deploy(ts, newSendAst, new Uint8Array([1,2,3]));
+
+  expect(ts2.procs.count()).toEqual(1);
+  expect(ts2.sends.count()).toEqual(1);
+  expect(ts2.joins.count()).toEqual(0);
+});
+
 // Par in single-action join
 
 // Par in multiple action join

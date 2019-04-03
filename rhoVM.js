@@ -139,17 +139,23 @@ function parIn(ts, term, env, randomState) {
       let tempTS = ts;
       let tempRandom = randomState;
       for (let proc of term.procs) {
-        tempTS = parIn(tempTS, proc, env, tempRandom);
         tempRandom = hash(tempRandom);
+        tempTS = parIn(tempTS, proc, env, tempRandom);
       }
       return tempTS;
     }
 
     case "new": {
-      //TODO no parser for new's yet
-      // for each new variable declared in term.vars generate a new unforgeable ID from the random state
+      let newBindings = {};
+      // Generate new unforgeable ID for each new variable
+      let tempRandom = randomState;
+      for (let x of term.vars) {
+        tempRandom = hash(tempRandom);
+        newBindings[x] = tempRandom;
+      }
+
       // Then recurse adding those bindings to the environment
-      break;
+      return parIn(ts, term.body, {...env, ...newBindings}, hash(tempRandom));
     }
   }
 }
@@ -165,7 +171,6 @@ function parIn(ts, term, env, randomState) {
  */
 function evaluateInEnvironment (term, env) {
   if (term.tag === "ground") {
-    term.hashCode = () => (term.type, term.value);
     return term;
   }
 
