@@ -1,13 +1,7 @@
 const { Map, Set } = require("immutable");
 const rhoVM = require('../rhoVM.js');
-const { randomBytes } = require('tweetnacl');
 const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst } = require('./trees.js');
 
-const empty = {
-  procs: Map(),
-  sends: Map(),
-  joins: Map(),
-};
 
 let ts;
 beforeEach(() => {
@@ -16,13 +10,13 @@ beforeEach(() => {
 
 // Test Empty tuplespaces
 test('Fresh Tuplespace', () => {
-  expect(ts).toEqual(empty);
+  expect(rhoVM.isEmpty(ts)).toBe(true);
 });
 
 test('Nil', () => {
   const ts2 = rhoVM.deploy(ts, nilAst, new Uint8Array([1,2,3]));
 
-  expect(ts2).toEqual(empty);
+  expect(rhoVM.isEmpty(ts2)).toBe(true);
 });
 
 // Test parring sends in

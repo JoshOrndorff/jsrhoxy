@@ -46,6 +46,30 @@ function fresh() {
 }
 
 /**
+ * Tells whether the given tuplespace is empty
+ */
+module.exports.isEmpty = isEmpty;
+function isEmpty(ts) {
+  if (ts.procs.count() !== 0) {
+    return false;
+  }
+
+  for (let idSet of ts.sends.values()) {
+    if (idSet.size !== 0){
+      return false;
+    }
+  }
+
+  for (let idSet of ts.joins.values()) {
+    if (idSet.size !== 0){
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  *
  */
 module.exports.tuplespaceToJson = tuplespaceToJson;
@@ -86,7 +110,6 @@ function deploy(ts, term, seed) {
  * @param randomState Random state to seed Ids
  * @return the same tuplespace mutated.
  */
-module.exports.parIn = parIn
 function parIn(ts, term, env, randomState) {
   switch (term.tag) {
 
@@ -181,14 +204,15 @@ function evaluateInEnvironment (term, env) {
       tag: "send",
       chan: evaluateInEnvironment(term.chan, env),
       message: evaluateInEnvironment(term.message, env),
-      hashCode: () => (0),
     }
   }
 
   if (term.tag === "join") {
-    //TODO make each action's channel concrete
+    // Make each action's channel concrete
     let concreteActions = {};
-    //TODO make sure there aren't any free variables in the continuation??
+    //TODO loop through the actions and recursively call evaluate in environment
+
+    // Make sure there aren't any free variables in the continuation??
     if ((freeNames(term.continuation).length === 0)) {
       return {
         tag: "join",
@@ -204,4 +228,165 @@ function evaluateInEnvironment (term, env) {
   throw "Non exhaustive pattern match in evaluateInEnvironment.";
 }
 
- }
+/**
+ * Performs a single comm reduction on a tuplespace
+ * @param ts The tutplespace in which the reduction will occur
+ * @param joinId Id of the join to be commed
+ * @param sendIds List of Ids of sends to be commed
+ * @return A new tuplespace updated according to the reduction
+ * @throws If the comm supplied is not valid
+ */
+module.exports.executeComm = executeComm;
+function executeComm(ts, joinId, sendIds) {
+
+  // Grab the join and send objects from the tuplespace
+  const join = ts.procs.get(joinId);
+  const sends = sendIds.map(sId => ts.procs.get(sId));
+
+  // Make sure the specified processes are actually commable, and
+  // get the new bindings
+  const bindings = commable(new Set(join.actions), new Set(sends));
+  if (bindings === false) {
+    throw ("Invalid comm requested.")
+  }
+
+  // Remove consumed processes from the tuplespace
+  const allIds = Set(sendIds.concat([joinId]));
+  // DEVELOPMENT NOTE: At this point bindings and allIds are both correct.
+  const reducedTS = {
+    // Not sure what's up with the v, k ordering
+    // https://immutable-js.github.io/immutable-js/docs/#/Set/subtract
+    procs: ts.procs.deleteAll(allIds),
+    sends: ts.sends.map((v, k) => v.subtract(allIds)),
+    joins: ts.joins.map((v, k) => v.subtract(allIds)),
+  };
+
+  // Calculate the new random state.
+  const newRandom = mergeRandom(allIds)
+
+  // Add the new stuff into the tuplespace
+  // Merge objects with spread operator https://stackoverflow.com/a/171256/4184410
+  return parIn(reducedTS, join.body, {...join.environment, ...bindings}, newRandom);
+}
+
+/**
+ * Poor man's probably-inseucre-af mergeable random state.
+ * Merges many random states into one.
+ * Use at your own risk, not audited, not for production, blah blah blah
+ *
+ * https://stackoverflow.com/a/49129872/4184410
+ *
+ * @param initials The initial states to merge. Should be Uint8Arrays
+ * @return A new pseudo-random-ish state
+ */
+function mergeRandom(initials) {
+
+  // Get the total length of all arrays.
+  let length = 0;
+  initials.forEach(item => {
+    length += item.length;
+  });
+
+  // Create a new array with total length and merge all source arrays.
+  let mergedArray = new Uint8Array(length);
+  let offset = 0;
+  initials.forEach(item => {
+    mergedArray.set(item, offset);
+    offset += item.length;
+  });
+
+  //console.log("preview of the merged random state");
+  //console.log(hash(mergedArray));
+  return hash(mergedArray);
+}
+
+/**
+ * Make sure they are compatible (same channel, patterns match, etc)
+ * O(n2) algorithm to pair the actions with the sends
+ *
+ * This function uses all immutable data structures.
+ *
+ * @param actions The Set of remaining actions to pair
+ * @param sends The Set of remaining sends to pair
+ * @return either a Map of bindings, or false
+ */
+function commable(actions, sends) {
+  if (actions.size === 0 && sends.size === 0) {
+    return new Map();
+  }
+
+  let action = actions.first();
+  let currentBindings;
+  for (let send of sends.values()) {
+
+    if (structEquiv(action.chan, send.chan) /*&& pattern matches*/) {
+      // TODO the bindings should come from the pattern matcher
+      // For now assume every pattern is a free variable.
+      currentBindings = Map([[action.pattern.givenName, send.message]]);
+
+
+      let remainingBindings = commable(actions.remove(action), sends.remove(send));
+
+      if (remainingBindings !== false) {
+        //TODO make sure the same name isn't used twice as a binder
+        return remainingBindings.merge(currentBindings);
+      }
+    }
+
+  }
+
+  // No sends matched this action
+  return false;
+}
+
+/**
+ * Tells whether two terms are structurally equivalent
+ * The two terms passed in should be fully concrete.
+ * No more variable mentions present.
+ * @param a The first term to check
+ * @param b The second term to check
+ * @return Boolean, whether a and b are structurally equivalent
+ */
+function structEquiv(a, b) {
+
+  // Bundles don't affect structural equivalence
+  if (a.tag === 'bundle') {
+    return structEquiv(a.proc, b);
+  }
+
+  if (b.tag === 'bundle') {
+    return structEquiv(a, b.proc);
+  }
+
+  // If tags are different, we can short-circuit
+  if (a.tag !== b.tag) {
+    return false;
+  }
+  // Ground Terms
+  if (a.tag === "ground") {
+    return a.type === b.type && a.value === b.value;
+  }
+
+  // Sends
+  if (a.tag === "send") {
+    return structEquiv(a.chan, b.chan) && structEquiv(a.message, b.message);
+  }
+
+  // Joins
+  if (a.tag === "join") {
+    //TODO
+    // check for same number of actions and fail fast if different
+    // O(n^2) check to see if they pair up correctly
+  }
+
+  // Pars
+  if (a.tag === "par") {
+    //TODO
+    // flatten nested pars and remove all the ground terms
+    // then check whether lengths are equal and fail-fast if not
+    // then O(n^2) check for valid matchings
+  }
+
+  // Should never get here if all valid tags above were checked
+  throw "Non-exhaustive pattern match in structEquiv.";
+}
