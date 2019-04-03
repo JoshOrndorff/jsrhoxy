@@ -95,9 +95,6 @@ function parIn(ts, term, env, randomState) {
     case "bundle":
       return parIn(ts, randomState, term.proc);
 
-    //TODO At some point around here, I need to actually look
-    // up values in environments. At least the channels should be fully subbed in.
-    // Or maybe sends coming in here should already be fully concretified?
     case "send": {
       // Sends should be fully concrete when they go into the tuplespace, so
       // get everything you need from the environment now.
