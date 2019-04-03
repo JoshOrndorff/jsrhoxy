@@ -33,6 +33,7 @@ test('Par in one send', () => {
 
   expect(ts2.procs.count()).toEqual(1);
   expect(ts2.sends.count()).toEqual(1);
+  expect(ts2.joins.count()).toEqual(0);
 });
 
 test('Par in same send twice', () => {
@@ -43,6 +44,7 @@ test('Par in same send twice', () => {
 
   expect(ts3.procs.count()).toEqual(2);
   expect(ts3.sends.count()).toEqual(1);
+  expect(ts2.joins.count()).toEqual(0);
 });
 
 test('Par in two different sends', () => {
@@ -53,6 +55,7 @@ test('Par in two different sends', () => {
 
   expect(ts3.procs.count()).toEqual(2);
   expect(ts3.sends.count()).toEqual(2);
+  expect(ts2.joins.count()).toEqual(0);
 });
 
 test('Par in one send, one ground', () => {
@@ -63,6 +66,22 @@ test('Par in one send, one ground', () => {
 
   expect(ts3.procs.count()).toEqual(1);
   expect(ts3.sends.count()).toEqual(1);
+  expect(ts2.joins.count()).toEqual(0);
+});
+
+test('Par in a Par of two sends', () => {
+  const ts = rhoVM.fresh();
+
+  const parAst = {
+    tag: "par",
+    procs: [sendAst, sendAst],
+  }
+
+  const ts2 = rhoVM.deploy(ts, parAst, new Uint8Array([1,2,3]));
+
+  expect(ts2.procs.count()).toEqual(2);
+  expect(ts2.sends.count()).toEqual(1);
+  expect(ts2.joins.count()).toEqual(0);
 });
 
 // Par in single-action join

@@ -45,51 +45,70 @@ function fresh() {
 }
 
 /**
- * Takes in a string of rholang code, parses it, and deploys it
- * to a tuplespace. Basically just a wrapper around addToTuplespace
- * that sets up the empty environment.
+ *
+ */
+module.exports.tuplespaceToJson = tuplespaceToJson;
+function tuplespaceToJson(ts) {
+  throw "Exporting tuplespace to JSON, not yet implemented";
+}
+
+/**
+ *
+ */
+module.exports.tuplespaceFromJson = tuplespaceFromJson;
+function tuplespaceFromJson(ts) {
+  throw "Importing tuplespace from JSON, not yet implemented";
+}
+
+/**
+ * Takes in rholang AST and deploys it to a tuplespace.
+ * Basically just a wrapper around addToTuplespace
+ * that sets up the empty environment and random state.
  * @param ts The tuplespace to deploy to
  * @param term An AST of the rholang term to be deployed
- * @param seed
+ * @param seed A seed for the random state
  * @return The same tuplespace mutated
  * @throws Parese errors
  */
 module.exports.deploy = deploy;
 function deploy(ts, term, seed) {
-  //console.log(hash(seed));
-  return parIn(ts, {}, seed, term);
+  // TODO eventually we'll want to hash the seed, but for now it's useful
+  // to manually assign ids.
+  return parIn(ts, term, {}, seed);
 }
 
 /**
  * Update the tuplespace by parring in a term
  * @param ts The tuplespace prestate
- * @param environment Bindings that term needs to retain
- * @param randomState Random state to seed Ids
  * @param term An AST of the term to be parred in
+ * @param env The environment in which the term should be evaluated.
+ * @param randomState Random state to seed Ids
  * @return the same tuplespace mutated.
  */
 module.exports.parIn = parIn
-function parIn(ts, env, randomState, term) {
+function parIn(ts, term, env, randomState) {
   switch (term.tag) {
 
     case "ground":
       return ts;
 
     case "bundle":
-      return parIn(ts, env, randomState, term.proc);
+      return parIn(ts, randomState, term.proc);
 
     //TODO At some point around here, I need to actually look
     // up values in environments. At least the channels should be fully subbed in.
     // Or maybe sends coming in here should already be fully concretified?
     case "send": {
-      term.env = env;
+      // Sends should be fully concrete when they go into the tuplespace, so
+      // get everything you need from the environment now.
+      let concreteSend = evaluateInEnvironment(term, env);
       let poststate = {};
-      poststate.procs = ts.procs.set(randomState, term);
-      if (ts.sends.has(term.chan)) {
-        poststate.sends = ts.sends.set(term.chan, ts.sends.get(term.chan).add(randomState));
+      poststate.procs = ts.procs.set(randomState, concreteSend);
+      if (ts.sends.has(concreteSend.chan)) {
+        poststate.sends = ts.sends.set(concreteSend.chan, ts.sends.get(concreteSend.chan).add(randomState));
       }
       else {
-        poststate.sends = ts.sends.set(term.chan, Set([randomState]));
+        poststate.sends = ts.sends.set(concreteSend.chan, Set([randomState]));
       }
       poststate.joins = ts.joins;
       return poststate;
@@ -115,9 +134,71 @@ function parIn(ts, env, randomState, term) {
       return poststate;
     }
 
-    case "par":
-      //TODO
+    case "par": {
+      // Par them all in sequentially.
+      let tempTS = ts;
+      let tempRandom = randomState;
+      for (let proc of term.procs) {
+        tempTS = parIn(tempTS, proc, env, tempRandom);
+        tempRandom = hash(tempRandom);
+      }
+      return tempTS;
+    }
+
+    case "new": {
+      //TODO no parser for new's yet
+      // for each new variable declared in term.vars generate a new unforgeable ID from the random state
+      // Then recurse adding those bindings to the environment
       break;
-   }
+    }
+  }
+}
+
+/**
+ * Given an AST, returns a fully concrete version of the same AST.
+ * All variables will have been looked up in the appropriate environment.
+ * Finally, a .hashCode() method will be attached for proper insertion into
+ * the tuplespace.
+ * @param term The term to be made concrete
+ * @param env The environment bindings to use
+ * @return Concrete AST with .hashCode method
+ */
+function evaluateInEnvironment (term, env) {
+  if (term.tag === "ground") {
+    term.hashCode = () => (term.type, term.value);
+    return term;
+  }
+
+  if (term.tag === "variable") {
+    return env[term.givenName];
+  }
+
+  if (term.tag === "send") {
+    return {
+      tag: "send",
+      chan: evaluateInEnvironment(term.chan, env),
+      message: evaluateInEnvironment(term.message, env),
+      hashCode: () => (0),
+    }
+  }
+
+  if (term.tag === "join") {
+    //TODO make each action's channel concrete
+    let concreteActions = {};
+    //TODO make sure there aren't any free variables in the continuation??
+    if ((freeNames(term.continuation).length === 0)) {
+      return {
+        tag: "join",
+        actions: concreteActions,
+        continuation: term.continuation,
+      }
+    }
+    else {
+      throw "Free names not allowed in continuation.... TODO figure out exactly what this message should say."
+    }
+  }
+
+  throw "Non exhaustive pattern match in evaluateInEnvironment.";
+}
 
  }
