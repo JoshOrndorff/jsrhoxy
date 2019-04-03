@@ -1,6 +1,6 @@
 const nearley = require("nearley");
 const grammar = require("../rhoxyGrammar.js");
-const { nilAst, sendAst } = require('./trees.js');
+const { nilAst, sendAst, forXAst } = require('./trees.js');
 
 let parser;
 beforeEach(() => {
@@ -113,22 +113,7 @@ test('Send w/ grounds', () => {
 test('Basic Receive', () => {
   parser.feed("for(x <- @Nil){Nil}");
 
-  const expected = {
-    tag: "join",
-    actions: [
-      {
-        tag: "action",
-        pattern: {
-          tag: "variable",
-          givenName: "x"
-        },
-        chan: nilAst
-      }
-    ],
-    body: nilAst,
-  };
-
-  expect(parser.results[0]).toEqual(expected);
+  expect(parser.results[0]).toEqual(forXAst);
 });
 
 test('two-action join', () => {

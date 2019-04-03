@@ -22,7 +22,8 @@ const { hash } = require("tweetnacl");
       234,
       345
   ],
-  // List of all joins (not indexed by channel)
+  // Channel-indexed list of all joins. There will be dupes, becuase
+  // multi-action joins appear in multiple lists.
   joins: Map {
     chan1: Set[
       567
@@ -121,10 +122,10 @@ function parIn(ts, term, env, randomState) {
       // Now go through and put each channel in the map
       for (let {chan} of term.actions) {
         if (ts.joins.has(chan)) {
-          poststate.joins = ts.joins.set(chan, ts.sends.get(chan).add(randomState));
+          poststate.joins = poststate.joins.set(chan, ts.sends.get(chan).add(randomState));
         }
         else {
-          poststate.sends = ts.sends.set(chan, Set([randomState]));
+          poststate.joins = poststate.joins.set(chan, Set([randomState]));
         }
       }
 
