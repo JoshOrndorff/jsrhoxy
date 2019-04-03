@@ -2,19 +2,19 @@ const nearley = require("nearley");
 const grammar = require("../rhoxyGrammar.js");
 const { nilAst, sendAst } = require('./trees.js');
 
-// TODO setup method? I would rather construct the parser object
-// there than in each test.
+let parser;
+beforeEach(() => {
+  parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+});
 
 // Tests for nil parser
 test('Simple Nil', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("Nil");
 
   expect(parser.results[0]).toEqual(nilAst);
 });
 
 test('Nil w/ whitespace', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("    Nil \t ");
 
   expect(parser.results[0]).toEqual(nilAst);
@@ -22,7 +22,6 @@ test('Nil w/ whitespace', () => {
 
 // Tests for int parser
 test('Simple int', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("23");
 
   const expected = {
@@ -35,7 +34,6 @@ test('Simple int', () => {
 });
 
 test('Positive int', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("+4132");
 
   const expected = {
@@ -48,7 +46,6 @@ test('Positive int', () => {
 });
 
 test('Negative int', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("-32");
 
   const expected = {
@@ -62,7 +59,6 @@ test('Negative int', () => {
 
 // Tests for bool parser
 test('true', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed(" true\n");
 
   const expected = {
@@ -75,7 +71,6 @@ test('true', () => {
 });
 
 test('false', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("\tfalse");
 
   const expected = {
@@ -89,14 +84,12 @@ test('false', () => {
 
 // Tests for send parser
 test('Basic Send', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("@Nil!(Nil)");
 
   expect(parser.results[0]).toEqual(sendAst);
 });
 
 test('Send w/ grounds', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("@4 ! (false)");
 
   const expected = {
@@ -118,7 +111,6 @@ test('Send w/ grounds', () => {
 
 // Tests for join parser
 test('Basic Receive', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("for(x <- @Nil){Nil}");
 
   const expected = {
@@ -140,7 +132,6 @@ test('Basic Receive', () => {
 });
 
 test('two-action join', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("for(x <- @Nil ; y <- @Nil){Nil}");
 
   const expected = {
@@ -171,7 +162,6 @@ test('two-action join', () => {
 
 // Tests for par parser
 test('Basic Par', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("Nil|Nil");
 
   const expected = {
@@ -186,7 +176,6 @@ test('Basic Par', () => {
 });
 
 test('Send | Nil', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("@Nil!(Nil)|Nil");
 
   const expected = {
@@ -201,7 +190,6 @@ test('Send | Nil', () => {
 });
 
 test('Three-Nil Par', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("Nil|Nil|Nil");
 
   const expected = {
@@ -217,7 +205,6 @@ test('Three-Nil Par', () => {
 });
 
 test('Par w/ whitespace', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("Nil |\nNil |\nNil");
 
   const expected = {
@@ -234,7 +221,6 @@ test('Par w/ whitespace', () => {
 
 // Tests for bundle parser
 test('Basic Bundle', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("bundle{Nil}");
 
   const expected = {
@@ -245,9 +231,7 @@ test('Basic Bundle', () => {
   expect(parser.results[0]).toEqual(expected);
 });
 
-// Tests for bundle parser
 test('Bundle w/ space', () => {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
   parser.feed("bundle {Nil}");
 
   const expected = {
@@ -256,4 +240,28 @@ test('Bundle w/ space', () => {
   };
 
   expect(parser.results[0]).toEqual(expected);
+});
+
+// Tests for comments
+test('Comment 1', () => {
+  parser.feed("/* comment */ Nil");
+
+  expect(parser.results[0]).toEqual(nilAst);
+});
+
+
+test('Comment 2', () => {
+  // Warning this one fails without the final new line.
+  // Could "fix" that by always tacking on a new line before
+  // passing the code to the parser.
+  // That would make requiring the \n acceptible expected parser behavior.
+  parser.feed("Nil // comment\n");
+
+  expect(parser.results[0]).toEqual(nilAst);
+});
+
+test('Comment 3', () => {
+  parser.feed("@Nil/**/!(/**/Nil)//dasfasdf\n/**/");
+
+  expect(parser.results[0]).toEqual(sendAst);
 });

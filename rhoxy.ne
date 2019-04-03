@@ -1,4 +1,4 @@
-@builtin "whitespace.ne"
+@include "spacecomments.ne"
 @include "ground.ne"
 
 # Apparently, the top-level thing should always be the first parse rule
