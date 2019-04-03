@@ -10,13 +10,6 @@ function groundTree(type, value) {
     value
   }
 }
-
-
-const actionTree = ([,pattern,,,,chan,]) => ({
-  tag: "action",
-  pattern,
-  chan
-})
 var grammar = {
     Lexer: undefined,
     ParserRules: [
@@ -133,6 +126,7 @@ var grammar = {
     {"name": "bool", "symbols": ["bool$string$2"], "postprocess": () => false},
     {"name": "main", "symbols": ["_", "proc", "_"], "postprocess": ([,p,]) => p},
     {"name": "proc", "symbols": ["ground"], "postprocess": id},
+    {"name": "proc", "symbols": [{"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess": ([,,proc,,]) => (proc)},
     {"name": "proc", "symbols": ["chan", "_", {"literal":"!"}, "_", {"literal":"("}, "_", "proc", "_", {"literal":")"}], "postprocess":  ([chan,,,,,,message,,]) => ({
           tag: 'send',
           chan,
@@ -157,20 +151,38 @@ var grammar = {
           tag: "bundle",
           proc
         }) },
+    {"name": "proc$string$3", "symbols": [{"literal":"n"}, {"literal":"e"}, {"literal":"w"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc$string$4", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc", "symbols": ["proc$string$3", "__", "variables", "__", "proc$string$4", "_", "proc"], "postprocess":  ([,,vars,,,,body]) => {
+          return {
+            tag: "new",
+            vars,
+            body
+          }
+        }
+              },
     {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
     {"name": "actions", "symbols": ["action"]},
     {"name": "actions", "symbols": ["actions", "_", {"literal":";"}, "_", "action"], "postprocess":  ([actions,,,,action]) =>
         actions.concat([action])
                },
     {"name": "action$string$1", "symbols": [{"literal":"<"}, {"literal":"-"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "action", "symbols": ["_", "pattern", "_", "action$string$1", "_", "chan", "_"], "postprocess": actionTree},
+    {"name": "action", "symbols": ["_", "pattern", "_", "action$string$1", "_", "chan", "_"], "postprocess":  ([,pattern,,,,chan,]) => ({
+          tag: "action",
+          pattern,
+          chan
+        }) },
     {"name": "pattern", "symbols": ["variable"], "postprocess": id},
     {"name": "variable$ebnf$1", "symbols": []},
     {"name": "variable$ebnf$1", "symbols": ["variable$ebnf$1", /[a-zA-Z0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "variable", "symbols": [/[a-zA-Z]/, "variable$ebnf$1"], "postprocess":  ([n, ame]) => ({
           tag: "variable",
           givenName: n + ame.join('')
-        }) }
+        }) },
+    {"name": "variables", "symbols": ["variable"]},
+    {"name": "variables", "symbols": ["variables", "_", {"literal":","}, "_", "variable"], "postprocess":  ([variables,,,,variable]) =>
+        variables.concat([variable])
+             }
 ]
   , ParserStart: "main"
 }

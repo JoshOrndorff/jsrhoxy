@@ -265,3 +265,42 @@ test('Comment 3', () => {
 
   expect(parser.results[0]).toEqual(sendAst);
 });
+
+// Tests for new parser
+test('new x', () => {
+  parser.feed("new x in {Nil}");
+
+  const expected = {
+    tag: "new",
+    vars: [
+      {
+        tag: "variable",
+        givenName: "x",
+      }
+    ],
+    body: nilAst,
+  }
+
+  expect(parser.results[0]).toEqual(expected);
+});
+
+test('new x, y', () => {
+  parser.feed("new x, y in {Nil}");
+
+  const expected = {
+    tag: "new",
+    vars: [
+      {
+        tag: "variable",
+        givenName: "x",
+      },
+      {
+        tag: "variable",
+        givenName: "y",
+      }
+    ],
+    body: nilAst,
+  }
+
+  expect(parser.results[0]).toEqual(expected);
+});

@@ -6,6 +6,7 @@ main -> _ proc _ {% ([,p,]) => p %}
 
 proc ->
     ground {% id %}
+  | "{" _ proc _ "}"  {% ([,,proc,,]) => (proc) %}
   | chan _ "!" _ "(" _ proc _ ")"
       {% ([chan,,,,,,message,,]) => ({
         tag: 'send',
@@ -34,6 +35,18 @@ proc ->
         tag: "bundle",
         proc
       }) %}
+  | "new" __ variables __ "in" _ proc
+      {% ([,,vars,,,,body]) => {
+          return {
+            tag: "new",
+            vars,
+            body
+          }
+        }
+      %}
+
+
+
 
 chan -> "@" proc {% ([,c]) => c %}
 
@@ -65,3 +78,11 @@ variable ->
       tag: "variable",
       givenName: n + ame.join('')
     }) %}
+
+# TODO this is copied from "actions" which gives an ambiguous grammar.
+variables ->
+    variable
+  | variables _ "," _ variable
+    {% ([variables,,,,variable]) =>
+      variables.concat([variable])
+     %}
