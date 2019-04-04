@@ -1,5 +1,5 @@
 const nearley = require("nearley");
-const grammar = require("./rhoxyGrammar.js");
+const grammar = require("./parser/rhoxyGrammar.js");
 const rhoVM = require('./rhoVM.js');
 const { randomBytes } = require('tweetnacl');
 

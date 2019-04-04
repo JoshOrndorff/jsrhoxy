@@ -1,4 +1,4 @@
-const rhoVM = require('../rhoVM.js');
+const rhoVM = require('../src/rhoVM.js');
 const { randomBytes } = require('tweetnacl');
 //const nearley = require("nearley");
 //const grammar = require("../rhoxyGrammar.js");

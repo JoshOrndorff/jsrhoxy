@@ -1,5 +1,5 @@
 const nearley = require("nearley");
-const grammar = require("../rhoxyGrammar.js");
+const grammar = require("../src/parser/rhoxyGrammar.js");
 const { nilAst, sendAst, forXAst } = require('./trees.js');
 
 let parser;

@@ -1,5 +1,5 @@
 const { Map, Set } = require("immutable");
-const rhoVM = require('../rhoVM.js');
+const rhoVM = require('../src/rhoVM.js');
 const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst } = require('./trees.js');
 
 

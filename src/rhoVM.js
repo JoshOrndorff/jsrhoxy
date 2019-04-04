@@ -1,37 +1,6 @@
 const { Map, Set } = require("immutable");
 const { hash } = require("tweetnacl");
 
-// Tuplespace type
-// The numbers are a unique id / poor-mans-pseudo-random-state
-// associated with each send or receive.  They will be hashes or something.
-/*
-{
-  // A Map from id's to process ASTs
-  procs: Map {
-    123: {tag: "send", ...},
-    234: {tag: "send", ...},
-    345: {tag: "send", ...},
-    567: {tag: "join", ...}
-  },
-  // A channel-indexed list of all sends
-  sends: Map {
-    chan1: Set [
-      123
-    ],
-    chan2: Set [
-      234,
-      345
-  ],
-  // Channel-indexed list of all joins. There will be dupes, becuase
-  // multi-action joins appear in multiple lists.
-  joins: Map {
-    chan1: Set[
-      567
-    ]
-  }
-}
-*/
-
 /**
  * Construct an empty tuplespace.
  * @return The new tuplespace
