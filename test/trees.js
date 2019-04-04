@@ -29,7 +29,7 @@ const forXAst = {
     {
       tag: "action",
       pattern: {
-        tag: "variable",
+        tag: "variableP",
         givenName: "x"
       },
       chan: nilAst
@@ -44,7 +44,7 @@ const forXyAst = {
     {
       tag: "action",
       pattern: {
-        tag: "variable",
+        tag: "variableP",
         givenName: "x"
       },
       chan: nilAst
@@ -52,7 +52,7 @@ const forXyAst = {
     {
       tag: "action",
       pattern: {
-        tag: "variable",
+        tag: "variableP",
         givenName: "y"
       },
       chan: intAst

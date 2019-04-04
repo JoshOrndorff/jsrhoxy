@@ -1,5 +1,6 @@
 @include "spacecomments.ne"
 @include "ground.ne"
+@include "patternMatcher.ne"
 
 # Apparently, the top-level thing should always be the first parse rule
 main -> _ proc _ {% ([,p,]) => p %}
@@ -69,8 +70,6 @@ action -> _ pattern _ "<-" _ chan _
     chan
   }) %}
 
-# TODO right now the only kind of pattern is a simple variable
-pattern -> variable {% id %}
 
 variable ->
   [a-zA-Z] [a-zA-Z0-9]:*

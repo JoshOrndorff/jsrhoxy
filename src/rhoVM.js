@@ -1,5 +1,6 @@
 const { Map, Set } = require("immutable");
 const { hash } = require("tweetnacl");
+const { patternMatch } = require("./patternMatcher.js");
 
 /**
  * Construct an empty tuplespace.
@@ -288,11 +289,8 @@ function commable(actions, sends) {
   let currentBindings;
   for (let send of sends.values()) {
 
-    if (structEquiv(action.chan, send.chan) /*&& pattern matches*/) {
-      // TODO the bindings should come from the pattern matcher
-      // For now assume every pattern is a free variable.
-      currentBindings = Map([[action.pattern.givenName, send.message]]);
-
+    if (structEquiv(action.chan, send.chan)) {
+      currentBindings = patternMatch(action.pattern, send.message);
 
       let remainingBindings = commable(actions.remove(action), sends.remove(send));
 

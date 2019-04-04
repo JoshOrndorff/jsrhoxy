@@ -44,3 +44,11 @@ Finally, the tuplespace may be modified to cache available comms, but right now 
   }
 }
 ```
+
+Terms and ASTs
+--------------
+TODO document these
+
+Sources are the nearly grammar in `src/parser/rhoxy.ne` and the test trees in `test/trees.js`.
+
+Could also include the ASTs for patterns. Examples are in comment in `src/patternMatcher.js`.

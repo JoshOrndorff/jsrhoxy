@@ -125,7 +125,7 @@ test('two-action join', () => {
       {
         tag: "action",
         pattern: {
-          tag: "variable",
+          tag: "variableP",
           givenName: "x"
         },
         chan: nilAst
@@ -133,7 +133,7 @@ test('two-action join', () => {
       {
         tag: "action",
         pattern: {
-          tag: "variable",
+          tag: "variableP",
           givenName: "y"
         },
         chan: nilAst

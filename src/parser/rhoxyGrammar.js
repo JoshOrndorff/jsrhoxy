@@ -124,6 +124,12 @@ var grammar = {
     {"name": "bool", "symbols": ["bool$string$1"], "postprocess": () => true},
     {"name": "bool$string$2", "symbols": [{"literal":"f"}, {"literal":"a"}, {"literal":"l"}, {"literal":"s"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "bool", "symbols": ["bool$string$2"], "postprocess": () => false},
+    {"name": "pattern$ebnf$1", "symbols": []},
+    {"name": "pattern$ebnf$1", "symbols": ["pattern$ebnf$1", /[a-zA-Z0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "pattern", "symbols": [/[a-zA-Z]/, "pattern$ebnf$1"], "postprocess":  ([n, ame]) => ({
+          tag: "variableP",
+          givenName: n + ame.join('')
+        }) },
     {"name": "main", "symbols": ["_", "proc", "_"], "postprocess": ([,p,]) => p},
     {"name": "proc", "symbols": ["ground"], "postprocess": id},
     {"name": "proc", "symbols": [{"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess": ([,,proc,,]) => (proc)},
@@ -172,7 +178,6 @@ var grammar = {
           pattern,
           chan
         }) },
-    {"name": "pattern", "symbols": ["variable"], "postprocess": id},
     {"name": "variable$ebnf$1", "symbols": []},
     {"name": "variable$ebnf$1", "symbols": ["variable$ebnf$1", /[a-zA-Z0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "variable", "symbols": [/[a-zA-Z]/, "variable$ebnf$1"], "postprocess":  ([n, ame]) => ({
