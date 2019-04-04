@@ -1,4 +1,4 @@
-const { Map, Set } = require("immutable");
+const { Map, Set, List } = require("immutable");
 const { hash } = require("tweetnacl");
 const { patternMatch } = require("./patternMatcher.js");
 
@@ -128,7 +128,7 @@ function parIn(ts, term, env, randomState) {
     case "par": {
       // Par them all in sequentially.
       let tempTS = ts;
-      let tempRandom = randomState;
+      let tempRandom = new Uint8Array(randomState);
       for (let proc of term.procs) {
         tempRandom = hash(tempRandom);
         tempTS = parIn(tempTS, proc, env, tempRandom);
@@ -139,7 +139,7 @@ function parIn(ts, term, env, randomState) {
     case "new": {
       let newBindings = {};
       // Generate new unforgeable ID for each new variable
-      let tempRandom = randomState;
+      let tempRandom = new Uint8Array(randomState);
       for (let x of term.vars) {
         tempRandom = hash(tempRandom);
         newBindings[x] = tempRandom;
@@ -154,48 +154,66 @@ function parIn(ts, term, env, randomState) {
 /**
  * Given an AST, returns a fully concrete version of the same AST.
  * All variables will have been looked up in the appropriate environment.
- * Finally, a .hashCode() method will be attached for proper insertion into
- * the tuplespace.
+ * Finally, .equals() and  .hashCode() methods will be attached for proper
+ * insertion into the tuplespace.
+ *
  * @param term The term to be made concrete
  * @param env The environment bindings to use
  * @return Concrete AST with .hashCode method
  */
+module.exports.evaluateInEnvironment = evaluateInEnvironment;
 function evaluateInEnvironment (term, env) {
-  if (term.tag === "ground") {
-    return term;
-  }
+  let result;
 
-  if (term.tag === "variable") {
-    return env[term.givenName];
-  }
-
-  if (term.tag === "send") {
-    return {
-      tag: "send",
-      chan: evaluateInEnvironment(term.chan, env),
-      message: evaluateInEnvironment(term.message, env),
+  switch (term.tag) {
+    case "ground": {
+      result = term;
+      break;
     }
-  }
 
-  if (term.tag === "join") {
-    // Make each action's channel concrete
-    let concreteActions = {};
-    //TODO loop through the actions and recursively call evaluate in environment
+    case "variable": {
+      result = env[term.givenName];
+      break;
+    }
 
-    // Make sure there aren't any free variables in the continuation??
-    if ((freeNames(term.continuation).length === 0)) {
-      return {
-        tag: "join",
-        actions: concreteActions,
-        continuation: term.continuation,
+    case "send": {
+      result = {
+        tag: "send",
+        chan: evaluateInEnvironment(term.chan, env),
+        message: evaluateInEnvironment(term.message, env),
       }
+      break;
     }
-    else {
-      throw "Free names not allowed in continuation.... TODO figure out exactly what this message should say."
+
+    case "join": {
+      // Make each action's channel concrete
+      let concreteActions = {};
+      //TODO loop through the actions and recursively call evaluate in environment
+
+      // Make sure there aren't any free variables in the continuation??
+      if ((freeNames(term.continuation).length === 0)) {
+        result = {
+          tag: "join",
+          actions: concreteActions,
+          continuation: term.continuation,
+        }
+      }
+      else {
+        throw "Free names not allowed in continuation.... TODO figure out exactly what this message should say."
+      }
+      break;
     }
+
+    default:
+      throw "Non exhaustive pattern match in evaluateInEnvironment.";
   }
 
-  throw "Non exhaustive pattern match in evaluateInEnvironment.";
+  // Tack on the methods and return.
+  return {
+    ...result,
+    equals: (other) => structEquiv(term, other),
+    hashCode: () => 0, // Worst hashcode ever. All items will collide. O(n) lookups.
+  };
 }
 
 /**
@@ -246,7 +264,8 @@ function executeComm(ts, joinId, sendIds) {
  *
  * https://stackoverflow.com/a/49129872/4184410
  *
- * @param initials The initial states to merge. Should be Uint8Arrays
+ * @param initials The initial states to merge. Should be immutable Lists
+ *                 that will convert successfully to Uint8Arrays.
  * @return A new pseudo-random-ish state
  */
 function mergeRandom(initials) {
@@ -254,20 +273,18 @@ function mergeRandom(initials) {
   // Get the total length of all arrays.
   let length = 0;
   initials.forEach(item => {
-    length += item.length;
+    length += item.size;
   });
 
   // Create a new array with total length and merge all source arrays.
   let mergedArray = new Uint8Array(length);
   let offset = 0;
   initials.forEach(item => {
-    mergedArray.set(item, offset);
+    mergedArray.set(new Uint8Array(item), offset);
     offset += item.length;
   });
 
-  //console.log("preview of the merged random state");
-  //console.log(hash(mergedArray));
-  return hash(mergedArray);
+  return List(hash(mergedArray));
 }
 
 /**

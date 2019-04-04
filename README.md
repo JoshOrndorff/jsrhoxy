@@ -14,7 +14,7 @@ It's also possible that the tuplespace may be re-written in object-oriented type
 Finally, the tuplespace may be modified to cache available comms, but right now there is no caching.
 ```
 // The numbers are a unique id / poor-mans-pseudo-random-state
-// associated with each send or receive.  They are Uint8Arrays.
+// associated with each send or receive.  They are immutable Lists containing values that fit into Uint8Array items.
 {
   // A Map from id's to process ASTs
   procs: Map {
