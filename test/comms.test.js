@@ -6,12 +6,10 @@ const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst } = require('./tree
 const { List } = require('immutable');
 
 
-// Make a fresh tuplespace and parser for each test
-let ts;
-//let parser;
+// Make a fresh virtual machine for each test
+let vm;
 beforeEach(() => {
-  ts = rhoVM.fresh();
-  //parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  vm = rhoVM();
 });
 
 /**
@@ -24,12 +22,12 @@ beforeEach(() => {
 test('Most basic comm', () => {
 
   // Deploy the pieces seperately to easily set their ids
-  const ts2 = rhoVM.deploy(ts, forXAst, List([1]));
-  const ts3 = rhoVM.deploy(ts2, sendAst, List([2]));
+  vm.deploy(forXAst, List([1]));
+  vm.deploy(sendAst, List([2]));
 
   // Perform the comm event
-  const ts4 = rhoVM.executeComm(ts3, List([1]), [List([2])]);
+  vm.executeComm(List([1]), [List([2])]);
 
   // Expect an empty tuplespace when done
-  expect(rhoVM.isEmpty(ts4)).toBe(true);
+  expect(vm.isEmpty()).toBe(true);
 });

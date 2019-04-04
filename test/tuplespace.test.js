@@ -1,40 +1,41 @@
 const { List } = require("immutable");
 const rhoVM = require('../src/rhoVM.js');
+const { evaluateInEnvironment } = require('../src/helpers.js');
 const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst } = require('./trees.js');
 
-
-let ts;
+let vm;
 beforeEach(() => {
-  ts = rhoVM.fresh();
+  vm = rhoVM();
 });
 
 // Test Empty tuplespaces
 test('Fresh Tuplespace', () => {
-  expect(rhoVM.isEmpty(ts)).toBe(true);
+  expect(vm.isEmpty()).toBe(true);
 });
 
 test('Nil', () => {
-  const ts2 = rhoVM.deploy(ts, nilAst, List([1,2,3]));
-
-  expect(rhoVM.isEmpty(ts2)).toBe(true);
+  vm.deploy(nilAst, List([1,2,3]));
+  expect(vm.isEmpty()).toBe(true);
 });
 
 // Test parring sends in
 test('Par in one send', () => {
-  const ts2 = rhoVM.deploy(ts, sendAst, List([1,2,3]));
+  vm.deploy(sendAst, List([1,2,3]));
 
+  let ts2 = vm.getTS();
   expect(ts2.procs.count()).toEqual(1);
   expect(ts2.sends.count()).toEqual(1);
   expect(ts2.joins.count()).toEqual(0);
 });
 
 test('Par in same send twice', () => {
-  const ts2 = rhoVM.deploy(ts, sendAst, List([1,2,3]));
-  const ts3 = rhoVM.deploy(ts2, sendAst, List([2,3,4]));
+  vm.deploy(sendAst, List([1,2,3]));
+  vm.deploy(sendAst, List([2,3,4]));
 
+  let ts3 = vm.getTS();
   expect(ts3.procs.count()).toEqual(2);
   expect(ts3.sends.count()).toEqual(1);
-  expect(ts2.joins.count()).toEqual(0);
+  expect(ts3.joins.count()).toEqual(0);
 });
 
 test('Ensure value-equality semantics in tuplespace', () => {
@@ -43,35 +44,38 @@ test('Ensure value-equality semantics in tuplespace', () => {
   expect(sendClone === sendAst).toBe(false);
 
   // Deploy the clones
-  const ts2 = rhoVM.deploy(ts, sendAst, List([1,2,3]));
-  const ts3 = rhoVM.deploy(ts2, sendClone, List([2,3,4]));
+  vm.deploy(sendAst, List([1,2,3]));
+  vm.deploy(sendClone, List([2,3,4]));
 
   // Build a concrete @Nil channel
-  const concreteNil = rhoVM.evaluateInEnvironment(nilAst, {})
+  const concreteNil = evaluateInEnvironment(nilAst, {})
 
   // Assertions
+  let ts3 = vm.getTS();
   expect(ts3.procs.count()).toEqual(2);
   expect(ts3.sends.count()).toEqual(1);
   expect(ts3.sends.get(concreteNil).size).toBe(2);
-  expect(ts2.joins.count()).toEqual(0);
+  expect(ts3.joins.count()).toEqual(0);
 })
 
 test('Par in two different sends', () => {
-  const ts2 = rhoVM.deploy(ts, sendAst, List([1,2,3]));
-  const ts3 = rhoVM.deploy(ts2, send2Ast, List([2,3,4]));
+  vm.deploy(sendAst, List([1,2,3]));
+  vm.deploy(send2Ast, List([2,3,4]));
 
+  let ts3 = vm.getTS();
   expect(ts3.procs.count()).toEqual(2);
   expect(ts3.sends.count()).toEqual(2);
-  expect(ts2.joins.count()).toEqual(0);
+  expect(ts3.joins.count()).toEqual(0);
 });
 
 test('Par in one send, one ground', () => {
-  const ts2 = rhoVM.deploy(ts, sendAst, List([1,2,3]));
-  const ts3 = rhoVM.deploy(ts2, intAst, List([2,3,4]));
+  vm.deploy(sendAst, List([1,2,3]));
+  vm.deploy(intAst, List([2,3,4]));
 
+  let ts3 = vm.getTS();
   expect(ts3.procs.count()).toEqual(1);
   expect(ts3.sends.count()).toEqual(1);
-  expect(ts2.joins.count()).toEqual(0);
+  expect(ts3.joins.count()).toEqual(0);
 });
 
 
@@ -82,8 +86,9 @@ test('Par in a Par of two sends', () => {
     procs: [sendAst, sendAst],
   }
 
-  const ts2 = rhoVM.deploy(ts, parAst, List([1,2,3]));
+  vm.deploy(parAst, List([1,2,3]));
 
+  let ts2 = vm.getTS();
   expect(ts2.procs.count()).toEqual(2);
   expect(ts2.sends.count()).toEqual(1);
   expect(ts2.joins.count()).toEqual(0);
@@ -99,8 +104,9 @@ test('Par in a send inside a new', () => {
     body: sendAst,
   }
 
-  const ts2 = rhoVM.deploy(ts, newSendAst, List([1,2,3]));
+  vm.deploy(newSendAst, List([1,2,3]));
 
+  let ts2 = vm.getTS();
   expect(ts2.procs.count()).toEqual(1);
   expect(ts2.sends.count()).toEqual(1);
   expect(ts2.joins.count()).toEqual(0);
@@ -110,8 +116,9 @@ test('Par in a send inside a new', () => {
 // Test parring joins in
 test('Par in a single-action join', () => {
 
-  const ts2 = rhoVM.deploy(ts, forXAst, List([1,2,3]));
+  vm.deploy(forXAst, List([1,2,3]));
 
+  let ts2 = vm.getTS();
   expect(ts2.procs.count()).toEqual(1);
   expect(ts2.sends.count()).toEqual(0);
   expect(ts2.joins.count()).toEqual(1);
@@ -120,8 +127,9 @@ test('Par in a single-action join', () => {
 
 test('Par in a multi-action join', () => {
 
-  const ts2 = rhoVM.deploy(ts, forXyAst, List([1,2,3]));
+  vm.deploy(forXyAst, List([1,2,3]));
 
+  let ts2 = vm.getTS();
   expect(ts2.procs.count()).toEqual(1);
   expect(ts2.sends.count()).toEqual(0);
   expect(ts2.joins.count()).toEqual(2);
