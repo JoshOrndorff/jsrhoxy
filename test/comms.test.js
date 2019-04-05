@@ -9,7 +9,7 @@ const { List } = require('immutable');
 // Make a fresh virtual machine for each test
 let vm;
 beforeEach(() => {
-  vm = rhoVM();
+  vm = rhoVM.pure();
 });
 
 /**
@@ -22,11 +22,11 @@ beforeEach(() => {
 test('Most basic comm', () => {
 
   // Deploy the pieces seperately to easily set their ids
-  vm.deploy(forXAst, List([1]));
-  vm.deploy(sendAst, List([2]));
+  vm.deploy(forXAst, List([1, 2]));
+  vm.deploy(sendAst, List([2, 3]));
 
   // Perform the comm event
-  vm.executeComm(List([1]), [List([2])]);
+  vm.executeComm(List([1, 2]), [List([2, 3])]);
 
   // Expect an empty tuplespace when done
   expect(vm.isEmpty()).toBe(true);

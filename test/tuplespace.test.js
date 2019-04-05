@@ -5,7 +5,11 @@ const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst } = require('./tree
 
 let vm;
 beforeEach(() => {
-  vm = rhoVM();
+  // Pure does not populate the standard registy and system ffi
+  vm = rhoVM.pure();
+
+  // This makes a standard working tuplespace
+  //vm = rhoVM();
 });
 
 // Test Empty tuplespaces
