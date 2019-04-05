@@ -1,13 +1,13 @@
 jsRhoxy
 =====
 
-Rhoxy is a family of interpreters for the [https://rholang.org/wiki](rholang) programming language (specifically it's simplified syntax). This is the javascript implementation.
+Rhoxy is a family of interpreters for the [rholang](https://rholang.org/wiki) programming language (specifically it's simplified syntax). This is the javascript implementation.
 
 This project strives to be a complete but minimal implementation of rholang as well as a learning and exploration tool.
 
-Right now not much is working, but there is a parser, a tuplespace, and basic comm support. Stay tuned for a walkthrough.
+Right now not much is working, but there is a parser, a tuplespace, and basic comm support. The colab did a code walkthrough on 05 Feb 2019. [Part 1](https://youtu.be/Id0kujWyNf4) is on youtube, but Part 2 was lost.
 
-Tuplespace
+Virtual Machine Architecture
 -------------
 It's likely that the entire tuplespace will be converted to use immutable data structures, but right not the top level entity is a regular javascript object.
 It's also possible that the tuplespace may be re-written in object-oriented typescript.
@@ -51,4 +51,4 @@ TODO document these
 
 Sources are the nearly grammar in `src/parser/rhoxy.ne` and the test trees in `test/trees.js`.
 
-Could also include the ASTs for patterns. Examples are in comment in `src/patternMatcher.js`.
+Could also include the ASTs for patterns. Examples are in comment in `src/patternMatcher.js`. Or better yet, make them the same ASTs as much as possible.

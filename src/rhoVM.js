@@ -78,6 +78,7 @@ function fresh(reg, ffis) {
     isEmpty,
     deploy,
     executeComm,
+    containsTerm,
     tuplespaceById: () => Map(procs),
     sendsByChan: () => Map(sends),
     joinsByChan: () => Map(joins),
@@ -264,6 +265,7 @@ function fresh(reg, ffis) {
     // Calculate the new random state.
     const newRandom = mergeRandom(allIds)
 
+    //TODO This is probably where the substitution should happen
     if (commJoin.tag === "join*") {
       // Call the system function
       commJoin.body(bindings);
