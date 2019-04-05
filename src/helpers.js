@@ -23,10 +23,11 @@ function evaluateInEnvironment (term, env) {
   let result;
 
   switch (term.tag) {
-    case "ground": {
+
+    case "unforgeable":
+    case "ground":
       result = term;
       break;
-    }
 
     case "variable": {
       result = env[term.givenName];
@@ -187,6 +188,11 @@ function structEquiv(a, b) {
     // then O(n^2) check for valid matchings
   }
 
+  // Unforgeables
+  if (a.tag === "unforgeable") {
+    return a.id.equals(b.id);
+  }
+
   // Should never get here if all valid tags above were checked
-  throw "Non-exhaustive pattern match in structEquiv.";
+  throw "Non-exhaustive pattern match in structEquiv:" + a.tag;
 }

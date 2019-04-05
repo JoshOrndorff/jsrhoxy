@@ -9,7 +9,8 @@ const { List } = require('immutable');
 // Make a fresh virtual machine for each test
 let vm;
 beforeEach(() => {
-  vm = rhoVM.pure();
+  pureVM = rhoVM.pure();
+  vm = rhoVM();
 });
 
 /**
@@ -22,12 +23,40 @@ beforeEach(() => {
 test('Most basic comm', () => {
 
   // Deploy the pieces seperately to easily set their ids
-  vm.deploy(forXAst, List([1, 2]));
-  vm.deploy(sendAst, List([2, 3]));
+  pureVM.deploy(forXAst, List([1, 2]));
+  pureVM.deploy(sendAst, List([2, 3]));
 
   // Perform the comm event
-  vm.executeComm(List([1, 2]), [List([2, 3])]);
+  pureVM.executeComm(List([1, 2]), [List([2, 3])]);
 
   // Expect an empty tuplespace when done
-  expect(vm.isEmpty()).toBe(true);
+  expect(pureVM.isEmpty()).toBe(true);
+});
+
+
+test('Hello World', () => {
+  //Construct a send on the stdout channel
+  //TODO Look up the channel in the registry
+  const sendTree = {
+    tag: 'send',
+    chan: {
+      tag: "unforgeable",
+      id: List([0]), // This channel hardwired to stdout
+    },
+    message: {
+      tag: "ground",
+      type: "string",
+      value: "Hello World"
+    }
+  }
+
+  // Deploy the send
+  vm.deploy(sendTree, List([1, 2]));
+
+  // Perform the comm event
+  vm.executeComm(List([0]), [List([1, 2])]);
+
+  // Expect an "empty" tuplespace when done
+  // Standard tuplespace has 2 persistent items
+  expect(vm.tuplespaceById().count()).toBe(2);
 });

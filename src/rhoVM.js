@@ -24,10 +24,13 @@ const standardFfis = [
           tag: "variableP",
           givenName: "msg",
         },
-        chan: standardRegistry['rho:io:stdout'],
+        chan: {
+          tag: "unforgeable",
+          id: standardRegistry['rho:io:stdout'],
+        }
       }
     ],
-    body: (bindings) => {console.log(bindings.msg)}
+    body: (bindings) => {console.log(bindings.get("msg"))}
   },
   {
     tag: "join*",
@@ -39,7 +42,10 @@ const standardFfis = [
           tag: "variableP",
           givenName: "msg",
         },
-        chan: standardRegistry['rho:io:stderr'],
+        chan: {
+          tag: "unforgeable",
+          id: standardRegistry['rho:io:stderr'],
+        },
       }
     ],
     body: (bindings) => {console.error(bindings.msg)}
@@ -65,7 +71,7 @@ function fresh(reg, ffis) {
       throw "Only join* and send* ffis are supported";
     }
 
-    parIn(ffi, {}, List[i]);
+    parIn(ffi, {}, List([i]));
   }
 
   return {
