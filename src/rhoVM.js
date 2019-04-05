@@ -72,11 +72,37 @@ function fresh(reg, ffis) {
     isEmpty,
     deploy,
     executeComm,
-    // Temporary to support testing
-    // Better means of querying would be to implement tuplespace checking methods
-    getTS: () => ({ procs, sends, joins }),
+    tuplespaceById: () => Map(procs),
+    sendsByChan: () => Map(sends),
+    joinsByChan: () => Map(joins),
   };
 
+  /**
+   * Check whether a particular rholang term is in the tuplespace
+   *
+   * Term passed in must be fully concrete
+   */
+  function containsTerm(term) {
+    switch (term.tag) {
+      case "send":
+      case "send*":
+        return sends.get(term.chan).has(term);
+
+      case "join":
+      case "join*":
+        // Only need to look it up by one channel
+        return joins.get(term.actions[0].chan).has(term);
+
+      case "ground":
+      case "par":
+      case "bundle":
+      case "new":
+        throw "Only sends and joins are stored in the tuplespace, not: " + term.tag;
+
+      default:
+        throw "Non-exhaustive pattern match in containsTerm.";
+    }
+  }
 
   /**
    * Tells whether the tuplespace is empty

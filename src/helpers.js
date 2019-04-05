@@ -62,7 +62,7 @@ function evaluateInEnvironment (term, env) {
     }
 
     default:
-      throw "Non exhaustive pattern match in evaluateInEnvironment.";
+      throw "Non-exhaustive pattern match in evaluateInEnvironment.";
   }
 
   // Tack on the methods and return.

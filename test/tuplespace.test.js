@@ -26,20 +26,20 @@ test('Nil', () => {
 test('Par in one send', () => {
   vm.deploy(sendAst, List([1,2,3]));
 
-  let ts2 = vm.getTS();
-  expect(ts2.procs.count()).toEqual(1);
-  expect(ts2.sends.count()).toEqual(1);
-  expect(ts2.joins.count()).toEqual(0);
+  const concreteChan = evaluateInEnvironment(sendAst.chan, {});
+
+  expect(vm.tuplespaceById().has(List([1,2,3]))).toBe(true);
+  expect(vm.sendsByChan().has(concreteChan)).toBe(true);
+  expect(vm.joinsByChan().count()).toEqual(0);
 });
 
 test('Par in same send twice', () => {
   vm.deploy(sendAst, List([1,2,3]));
   vm.deploy(sendAst, List([2,3,4]));
 
-  let ts3 = vm.getTS();
-  expect(ts3.procs.count()).toEqual(2);
-  expect(ts3.sends.count()).toEqual(1);
-  expect(ts3.joins.count()).toEqual(0);
+  expect(vm.tuplespaceById().has(List([1,2,3]))).toBe(true);
+  expect(vm.tuplespaceById().has(List([2,3,4]))).toBe(true);
+  expect(vm.joinsByChan().count()).toEqual(0);
 });
 
 test('Ensure value-equality semantics in tuplespace', () => {
@@ -55,31 +55,28 @@ test('Ensure value-equality semantics in tuplespace', () => {
   const concreteNil = evaluateInEnvironment(nilAst, {})
 
   // Assertions
-  let ts3 = vm.getTS();
-  expect(ts3.procs.count()).toEqual(2);
-  expect(ts3.sends.count()).toEqual(1);
-  expect(ts3.sends.get(concreteNil).size).toBe(2);
-  expect(ts3.joins.count()).toEqual(0);
+  expect(vm.tuplespaceById().has(List([1,2,3]))).toBe(true);
+  expect(vm.tuplespaceById().has(List([2,3,4]))).toBe(true);
+  expect(vm.sendsByChan().get(concreteNil).size).toBe(2);
+  expect(vm.joinsByChan().count()).toEqual(0);
 })
 
 test('Par in two different sends', () => {
   vm.deploy(sendAst, List([1,2,3]));
   vm.deploy(send2Ast, List([2,3,4]));
 
-  let ts3 = vm.getTS();
-  expect(ts3.procs.count()).toEqual(2);
-  expect(ts3.sends.count()).toEqual(2);
-  expect(ts3.joins.count()).toEqual(0);
+  expect(vm.tuplespaceById().count()).toEqual(2);
+  expect(vm.sendsByChan().count()).toEqual(2);
+  expect(vm.joinsByChan().count()).toEqual(0);
 });
 
 test('Par in one send, one ground', () => {
   vm.deploy(sendAst, List([1,2,3]));
   vm.deploy(intAst, List([2,3,4]));
 
-  let ts3 = vm.getTS();
-  expect(ts3.procs.count()).toEqual(1);
-  expect(ts3.sends.count()).toEqual(1);
-  expect(ts3.joins.count()).toEqual(0);
+  expect(vm.tuplespaceById().count()).toEqual(1);
+  expect(vm.sendsByChan().count()).toEqual(1);
+  expect(vm.joinsByChan().count()).toEqual(0);
 });
 
 
@@ -92,10 +89,9 @@ test('Par in a Par of two sends', () => {
 
   vm.deploy(parAst, List([1,2,3]));
 
-  let ts2 = vm.getTS();
-  expect(ts2.procs.count()).toEqual(2);
-  expect(ts2.sends.count()).toEqual(1);
-  expect(ts2.joins.count()).toEqual(0);
+  expect(vm.tuplespaceById().count()).toEqual(2);
+  expect(vm.sendsByChan().count()).toEqual(1);
+  expect(vm.joinsByChan().count()).toEqual(0);
 });
 
 test('Par in a send inside a new', () => {
@@ -110,10 +106,9 @@ test('Par in a send inside a new', () => {
 
   vm.deploy(newSendAst, List([1,2,3]));
 
-  let ts2 = vm.getTS();
-  expect(ts2.procs.count()).toEqual(1);
-  expect(ts2.sends.count()).toEqual(1);
-  expect(ts2.joins.count()).toEqual(0);
+  expect(vm.tuplespaceById().count()).toEqual(1);
+  expect(vm.sendsByChan().count()).toEqual(1);
+  expect(vm.joinsByChan().count()).toEqual(0);
 });
 
 
@@ -122,10 +117,9 @@ test('Par in a single-action join', () => {
 
   vm.deploy(forXAst, List([1,2,3]));
 
-  let ts2 = vm.getTS();
-  expect(ts2.procs.count()).toEqual(1);
-  expect(ts2.sends.count()).toEqual(0);
-  expect(ts2.joins.count()).toEqual(1);
+  expect(vm.tuplespaceById().count()).toEqual(1);
+  expect(vm.sendsByChan().count()).toEqual(0);
+  expect(vm.joinsByChan().count()).toEqual(1);
 });
 
 
@@ -133,10 +127,9 @@ test('Par in a multi-action join', () => {
 
   vm.deploy(forXyAst, List([1,2,3]));
 
-  let ts2 = vm.getTS();
-  expect(ts2.procs.count()).toEqual(1);
-  expect(ts2.sends.count()).toEqual(0);
-  expect(ts2.joins.count()).toEqual(2);
+  expect(vm.tuplespaceById().count()).toEqual(1);
+  expect(vm.sendsByChan().count()).toEqual(0);
+  expect(vm.joinsByChan().count()).toEqual(2);
 });
 
 // Par in partially-overlapping joins
