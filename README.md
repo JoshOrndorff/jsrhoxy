@@ -1,7 +1,7 @@
 jsRhoxy
 =====
 
-Rhoxy is a family of interpreters for the [rholang](https://rholang.org/wiki) programming language (specifically it's simplified syntax). This is the javascript implementation.
+Rhoxy is a family of interpreters for the [rholang](https://rholang.org/wiki) programming language (specifically its simplified syntax). This is the javascript implementation.
 
 This project strives to be a complete but minimal implementation of rholang as well as a learning and exploration tool.
 
