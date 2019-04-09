@@ -206,7 +206,7 @@ function fresh(reg, ffis) {
           parIn(proc, env, tempRandom);
         }
         break;
-      }
+
 
       case "new": {
         let newBindings = {};
