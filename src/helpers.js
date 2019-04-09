@@ -34,36 +34,53 @@ function evaluateInEnvironment (term, env) {
       break;
     }
 
-    case "send": {
+    case "send*":
+    case "send":
       result = {
         tag: "send",
         chan: evaluateInEnvironment(term.chan, env),
         message: evaluateInEnvironment(term.message, env),
       }
       break;
-    }
 
+
+    case "join*":
     case "join": {
       // Make each action's channel concrete
-      let concreteActions = {};
-      //TODO loop through the actions and recursively call evaluate in environment
+      let concreteActions = [];
+      for (let action of term.actions) {
+        concreteAction = {
+          tag: "action",
+          chan: evaluateInEnvironment(action.chan, env),
+          pattern: action.pattern,
+        };
+        concreteActions.push(concreteAction);
+      }
 
-      // Make sure there aren't any free variables in the continuation??
-      if ((freeNames(term.continuation).length === 0)) {
+      // Make sure there aren't any free variables in the continuation
+      // If I want to implement direct substitution, I'll prefer to
+      // formally bind those names to some kind of plugboard
+      // Idea, every process has its own registry. When that registry
+      // is non-empty, explicit substitution must take place before
+      // executing the process
+      if ( true /*TODO:  freeNames(term.continuation) subsetof Set(env.ownKeys))*/) {
+        // It's getting tedious to copy each element this way.
         result = {
-          tag: "join",
+          tag: term.tag,
           actions: concreteActions,
-          continuation: term.continuation,
-        }
+          continuation: term.continuation, // normal joins
+          body: term.body, // join*s
+          persistence: term.persistence,
+        };
       }
       else {
-        throw "Free names not allowed in continuation.... TODO figure out exactly what this message should say."
+        throw "Free names not allowed in continuation. Explicit substitution not yet supported."
       }
       break;
     }
 
     default:
-      throw "Non-exhaustive pattern match in evaluateInEnvironment.";
+      throw "Non-exhaustive pattern match in evaluateInEnvironment." + term.tag;
   }
 
   // Tack on the methods and return.
@@ -105,7 +122,8 @@ function mergeRandom(initials) {
 }
 
 /**
- * Make sure they are compatible (same channel, patterns match, etc)
+ * Determine whether a join and a set of sends are compatible
+ * (same channel, patterns match, etc) for a complete comm event.
  * O(n2) algorithm to pair the actions with the sends
  *
  * This function uses all immutable data structures.
@@ -123,13 +141,16 @@ function commable(actions, sends) {
   let currentBindings;
   for (let send of sends.values()) {
 
-    if (structEquiv(action.chan, send.chan)) {
-      currentBindings = patternMatch(action.pattern, send.message);
+    currentBindings = subcommable(action, send);
 
+    if (currentBindings !== false) {
       let remainingBindings = commable(actions.remove(action), sends.remove(send));
 
       if (remainingBindings !== false) {
         //TODO make sure the same name isn't used twice as a binder
+        //TODO Rather than returning in the middle of the loop,
+        // I should accumulate all the ways the comm can happen.
+        // Maybe optional early-return for #PerformanceReasons.
         return remainingBindings.merge(currentBindings);
       }
     }
@@ -137,6 +158,21 @@ function commable(actions, sends) {
   }
 
   // No sends matched this action
+  return false;
+}
+
+/**
+ * Test whether an action and a send would fit together in a comm event.
+ * If so calculate the bindings.
+ *
+ * @param action An AST for a single action
+ * @param send An AST for a single send
+ */
+function subcommable(action, send) {
+  if (structEquiv(action.chan, send.chan)) {
+    return patternMatch(action.pattern, send.message);
+  }
+
   return false;
 }
 
@@ -195,4 +231,19 @@ function structEquiv(a, b) {
 
   // Should never get here if all valid tags above were checked
   throw "Non-exhaustive pattern match in structEquiv:" + a.tag;
+}
+
+/**
+ * Calculate the freenames of a process
+ *
+ * @return Javascript list of freenames.
+ */
+function freeNames(term) {
+  switch (term.tag) {
+    case "ground":
+      return [];
+
+    case "send":
+      return send.chan
+  }
 }

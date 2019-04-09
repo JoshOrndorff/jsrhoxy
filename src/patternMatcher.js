@@ -27,6 +27,9 @@ function patternMatch(pattern, process) {
   }
 }
 
+//TODO Would it be useful to have a function called
+// matches that works basically the same but doesn't
+// collect the bindings? Seems like premature optimization atm.
 
 /*
 Here are some example of patterns

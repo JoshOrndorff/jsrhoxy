@@ -156,7 +156,8 @@ function fresh(reg, ffis) {
    * Update the tuplespace by parring in a term
    * @param term An AST of the term to be parred in
    * @param env The environment in which the term should be evaluated.
-   * @param randomState Random state to seed Ids
+   * @param randomState Random state to seed Ids.
+   *        Always stored as immutable list, converted to Uint8Array for hashing
    */
   function parIn(term, env, randomState) {
     switch (term.tag) {
@@ -172,37 +173,32 @@ function fresh(reg, ffis) {
       case "send": {
         // Must be fully concrete to enter tuplespace, so evaluate now
         let concreteSend = evaluateInEnvironment(term, env);
+        concreteSend.id = randomState;
         procs = procs.set(randomState, concreteSend);
-        if (sends.has(concreteSend.chan)) {
-          sends = sends.set(concreteSend.chan, sends.get(concreteSend.chan).add(randomState));
-        }
-        else {
-          sends = sends.set(concreteSend.chan, Set([randomState]));
-        }
+
+        // https://immutable-js.github.io/immutable-js/docs/#/Map/update
+        // update(key: K, notSetValue: V, updater: (value: V) => V): this
+        const updater = (old) => old.add(randomState);
+        sends = sends.update(concreteSend.chan, Set(), updater);
         break;
       }
 
       case "join*": // For FFIs like stdout
-      case "join": {
-        term.environment = env;
-        //TODO Do I need to call evaluate in environment here?
-        // I think I do. Maybe no visible bug yet because commable
-        // manaully calls structEquiv
-        procs = procs.set(randomState, term);
+      case "join":
+        let concreteJoin = evaluateInEnvironment(term, env);
+        concreteJoin.id = randomState;
+        concreteJoin.environment = env;
+        procs = procs.set(randomState, concreteJoin);
 
         // Now go through and put each channel in the map
         for (let {chan} of term.actions) {
-          if (joins.has(chan)) {
-            joins = joins.set(chan, sends.get(chan).add(randomState));
-          }
-          else {
-            joins = joins.set(chan, Set([randomState]));
-          }
+          const updater = (old) => old.add(randomState);
+          joins = joins.update(chan, Set(), updater);
         }
         break;
-      }
 
-      case "par": {
+
+      case "par":
         // Par them all in sequentially.
         let tempRandom = new Uint8Array(randomState);
         for (let proc of term.procs) {
@@ -265,7 +261,11 @@ function fresh(reg, ffis) {
     // Calculate the new random state.
     const newRandom = mergeRandom(allIds)
 
-    //TODO This is probably where the substitution should happen
+    // Handle all of the system sends
+    for (let send of commSends.filter(x => x.tag === "send*")) {
+      //TODO
+    }
+
     if (commJoin.tag === "join*") {
       // Call the system function
       commJoin.body(bindings);
