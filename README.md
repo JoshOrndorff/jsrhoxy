@@ -7,6 +7,13 @@ This project strives to be a complete but minimal implementation of rholang as w
 
 Right now not much is working, but there is a parser, a tuplespace, and basic comm support. The colab did a code walkthrough on 05 Feb 2019. [Part 1](https://youtu.be/Id0kujWyNf4) is on youtube, but Part 2 was lost.
 
+Usage
+-----
+Clone this repo
+run the tests
+Write rholang
+aspirational: run the code you just wrote.
+
 Virtual Machine Architecture
 -------------
 It's likely that the entire tuplespace will be converted to use immutable data structures, but right not the top level entity is a regular javascript object.
