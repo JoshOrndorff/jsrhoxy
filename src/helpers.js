@@ -87,7 +87,7 @@ function evaluateInEnvironment (term, env) {
   return {
     ...result,
     equals: (other) => structEquiv(term, other),
-    hashCode: () => 0, // Worst hashcode ever. All items will collide. O(n) lookups.
+    hashCode: hashTerm,
   };
 }
 
@@ -231,6 +231,24 @@ function structEquiv(a, b) {
 
   // Should never get here if all valid tags above were checked
   throw "Non-exhaustive pattern match in structEquiv:" + a.tag;
+}
+
+
+/**
+ * Computes the hashcode of a given term for purposes
+ * of using in immutable js libraries.
+ *
+ * TODO: Should same hashCode mean structurally equivalent?
+ *
+ * Terms being passed in here must be fully concrete so that
+ * there are no free variable mentions.
+ * @param the term to hash
+ * @return the hashcode (number? what type?)
+ */
+function hashTerm(term) {
+  return 0;
+  // Worst hashcode ever. All items will collide. O(n) lookups.
+  //TODO This next
 }
 
 /**
