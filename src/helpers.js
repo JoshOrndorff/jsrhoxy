@@ -217,9 +217,48 @@ function structEquiv(a, b) {
  * @return the hashcode (number? what type?)
  */
 function hashTerm(term) {
-  return 0;
-  // Worst hashcode ever. All items will collide. O(n) lookups.
-  //TODO This next
+
+  //TODO not attaching a hashCode method causes tests to fail, but when
+  // this one is attached, it is never called.
+  consdole.log("TODO Figure out why this function never gets called");
+
+  // Hash of each AST is constructed from its tag and the "rest"
+  // Rest depends on what type of AST we have.
+  let rest;
+
+  switch (term.tag) {
+    case "unforgeable":
+      rest = qdHash(term.id);
+      break;
+
+    case "ground":
+      rest = qdHash(term.type) ^ qdHash(term.value);
+      break;
+
+    case "send*":
+      throw "hashing send* not yet implemented";
+
+    case "send":
+      rest = qdHash(term.chan) ^ qdHash(term.message);
+      break;
+
+    case "join*":
+      throw "hashing join* not yet implemented";
+
+    case "join":
+      for (let action of term.actions) {
+        rest ^= qdHash(action.chan) ^ dqHash(action.pattern);
+      }
+      break;
+
+    case "par":
+      throw "hashing par not yet implemented";
+
+    default:
+      throw "Non-exhaustive pattern match in evaluateInEnvironment." + term.tag;
+  }
+
+  return (qdHash(term.tag) & rest);
 }
 
 /**
