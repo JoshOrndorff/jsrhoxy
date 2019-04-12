@@ -41,7 +41,7 @@ test('Hello World', () => {
     tag: 'send',
     chan: {
       tag: "unforgeable",
-      id: List([0]), // This channel hardwired to stdout
+      id: 0, // This channel hardwired to stdout
     },
     message: {
       tag: "ground",
@@ -51,10 +51,10 @@ test('Hello World', () => {
   }
 
   // Deploy the send
-  vm.deploy(sendTree, List([1, 2]));
+  vm.deploy(sendTree, 12);
 
   // Perform the comm event
-  vm.executeComm(List([0]), [List([1, 2])]);
+  vm.executeComm(0, [12]);
 
   // Expect an "empty" tuplespace when done
   // Standard tuplespace has 2 persistent items

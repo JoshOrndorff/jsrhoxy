@@ -1,10 +1,10 @@
 const { patternMatch } = require('./patternMatcher.js');
 const { Map, List } = require('immutable');
-const { hash } = require('tweetnacl');
+const { qdHash, mergeRandom } = require('tweetnacl');
 
 module.exports = {
   evaluateInEnvironment,
-  mergeRandom,
+  mergeRandom, // re-export from jankyCrypto
   commable,
   structEquiv,
 }
@@ -91,35 +91,6 @@ function evaluateInEnvironment (term, env) {
   };
 }
 
-/**
- * Poor man's probably-inseucre-af mergeable random state.
- * Merges many random states into one.
- * Use at your own risk, not audited, not for production, blah blah blah
- *
- * https://stackoverflow.com/a/49129872/4184410
- *
- * @param initials The initial states to merge. Should be immutable Lists
- *                 that will convert successfully to Uint8Arrays.
- * @return A new pseudo-random-ish state
- */
-function mergeRandom(initials) {
-
-  // Get the total length of all arrays.
-  let length = 0;
-  initials.forEach(item => {
-    length += item.size;
-  });
-
-  // Create a new array with total length and merge all source arrays.
-  let mergedArray = new Uint8Array(length);
-  let offset = 0;
-  initials.forEach(item => {
-    mergedArray.set(new Uint8Array(item), offset);
-    offset += item.length;
-  });
-
-  return List(hash(mergedArray));
-}
 
 /**
  * Determine whether a join and a set of sends are compatible
@@ -226,7 +197,7 @@ function structEquiv(a, b) {
 
   // Unforgeables
   if (a.tag === "unforgeable") {
-    return a.id.equals(b.id);
+    return a.id === b.id;
   }
 
   // Should never get here if all valid tags above were checked

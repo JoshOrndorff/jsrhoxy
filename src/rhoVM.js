@@ -1,16 +1,17 @@
 const { Map, Set, List } = require('immutable');
 const { hash } = require('tweetnacl');
-const { evaluateInEnvironment, mergeRandom, commable, structEquiv } = require('./helpers.js')
+const { evaluateInEnvironment, commable, structEquiv } = require('./helpers.js');
+const { splitRandom, mergeRandom } = require('../src/jankyCrypto.js');
 
 
 module.exports = () => fresh(standardRegistry, standardFfis);
 module.exports.pure = () => fresh({}, {});
 
 const standardRegistry = {
-  'rho:io:stdout': List([0]),
-  'rho:io:stdoutAck': List([1]),
-  'rho:io:stderr': List([2]),
-  'rho:io:stderrAck': List([3]),
+  'rho:io:stdout': 0,
+  'rho:io:stdoutAck': 1,
+  'rho:io:stderr': 2,
+  'rho:io:stderrAck': 3,
 };
 
 const standardFfis = [
@@ -71,7 +72,7 @@ function fresh(reg, ffis) {
       throw "Only join* and send* ffis are supported";
     }
 
-    parIn(ffi, {}, List([i]));
+    parIn(ffi, {}, i);
   }
 
   return {
@@ -156,8 +157,7 @@ function fresh(reg, ffis) {
    * Update the tuplespace by parring in a term
    * @param term An AST of the term to be parred in
    * @param env The environment in which the term should be evaluated.
-   * @param randomState Random state to seed Ids.
-   *        Always stored as immutable list, converted to Uint8Array for hashing
+   * @param randomState Random state (integer) for the term.
    */
   function parIn(term, env, randomState) {
     switch (term.tag) {
@@ -199,26 +199,28 @@ function fresh(reg, ffis) {
 
 
       case "par":
-        // Par them all in sequentially.
-        let tempRandom = new Uint8Array(randomState);
-        for (let proc of term.procs) {
-          tempRandom = hash(tempRandom);
-          parIn(proc, env, tempRandom);
+        const ps = term.procs;
+        let nextStates = splitRandom(randomState, ps.length);
+        // Would be nice to have zip
+        for (let i = 0; i < ps.length; i++) {
+          parIn(ps[i], env, nextStates[i]);
         }
         break;
 
 
       case "new": {
         let newBindings = {};
-        // Generate new unforgeable ID for each new variable
-        let tempRandom = new Uint8Array(randomState);
-        for (let x of term.vars) {
-          tempRandom = hash(tempRandom);
-          newBindings[x] = tempRandom;
+        const vs = term.vars;
+        let nextStates = splitRandom(randomState, vs.length + 1);
+        for (let i = 0; i < vs.length; i++) {
+          newBindings[vs[i]] = {
+            tag: "unforgeable",
+            id: nextStates[i],
+          };
         }
 
         // Then recurse adding those bindings to the environment
-        return parIn(term.body, {...env, ...newBindings}, hash(tempRandom));
+        return parIn(term.body, {...env, ...newBindings}, nextStates[vs.length]);
       }
     }
   }
