@@ -57,6 +57,19 @@ test('Negative int', () => {
   expect(parser.results[0]).toEqual(expected);
 });
 
+// Tests for string parser
+test("simple String", () => {
+  parser.feed("\"banana\"");
+
+  const expected = {
+    tag: "ground",
+    type: "string",
+    value: "banana",
+  };
+
+  expect(parser.results[0]).toEqual(expected);
+})
+
 // Tests for bool parser
 test('true', () => {
   parser.feed(" true\n");
