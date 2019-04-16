@@ -26,8 +26,9 @@ const standardFfis = [
           givenName: "msg",
         },
         chan: {
-          tag: "unforgeable",
-          id: standardRegistry['rho:io:stdout'],
+          tag: "ground",
+          type: "unforgeable",
+          value: standardRegistry['rho:io:stdout'],
         }
       }
     ],
@@ -44,8 +45,9 @@ const standardFfis = [
           givenName: "msg",
         },
         chan: {
-          tag: "unforgeable",
-          id: standardRegistry['rho:io:stderr'],
+          tag: "ground",
+          type: "unforgeable",
+          value: standardRegistry['rho:io:stderr'],
         },
       }
     ],
@@ -214,8 +216,9 @@ function fresh(reg, ffis) {
         let nextStates = splitRandom(randomState, vs.length + 1);
         for (let i = 0; i < vs.length; i++) {
           newBindings[vs[i]] = {
-            tag: "unforgeable",
-            id: nextStates[i],
+            tag: "ground",
+            type: "unforgeable",
+            value: nextStates[i],
           };
         }
 

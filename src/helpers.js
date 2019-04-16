@@ -24,7 +24,6 @@ function evaluateInEnvironment (term, env) {
 
   switch (term.tag) {
 
-    case "unforgeable":
     case "ground":
       result = term;
       break;
@@ -195,11 +194,6 @@ function structEquiv(a, b) {
     // then O(n^2) check for valid matchings
   }
 
-  // Unforgeables
-  if (a.tag === "unforgeable") {
-    return a.id === b.id;
-  }
-
   // Should never get here if all valid tags above were checked
   throw "Non-exhaustive pattern match in structEquiv:" + a.tag;
 }
@@ -220,18 +214,17 @@ function hashTerm(term) {
 
   //TODO not attaching a hashCode method causes tests to fail, but when
   // this one is attached, it is never called.
-  consdole.log("TODO Figure out why this function never gets called");
+  console.log("TODO Figure out why this function never gets called");
 
   // Hash of each AST is constructed from its tag and the "rest"
   // Rest depends on what type of AST we have.
   let rest;
 
   switch (term.tag) {
-    case "unforgeable":
-      rest = qdHash(term.id);
-      break;
 
     case "ground":
+      // Instantiated unforgeables are equivalent iff they have same randomState
+      // See case "new" for internally-bound unforgeables.
       rest = qdHash(term.type) ^ qdHash(term.value);
       break;
 
@@ -239,7 +232,7 @@ function hashTerm(term) {
       throw "hashing send* not yet implemented";
 
     case "send":
-      rest = qdHash(term.chan) ^ qdHash(term.message);
+      rest = hashTerm(term.chan) ^ hashTerm(term.message);
       break;
 
     case "join*":
@@ -247,12 +240,18 @@ function hashTerm(term) {
 
     case "join":
       for (let action of term.actions) {
-        rest ^= qdHash(action.chan) ^ dqHash(action.pattern);
+        rest ^= hashTerm(action.chan) ^ hashTerm(action.pattern);
       }
       break;
 
     case "par":
       throw "hashing par not yet implemented";
+
+    case "new":
+      // Bound unforgeables are inside. Rather than implementing additional logic
+      // to do debruijn indices or maintain a map, Can we somehow start it with a
+      // standard random State so that it will always hash the same.
+      throw "hashing new not yet implemented";
 
     default:
       throw "Non-exhaustive pattern match in evaluateInEnvironment." + term.tag;

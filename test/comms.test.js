@@ -40,8 +40,9 @@ test('Hello World', () => {
   const sendTree = {
     tag: 'send',
     chan: {
-      tag: "unforgeable",
-      id: 0, // This channel hardwired to stdout
+      tag: "ground",
+      type: "unforgeable",
+      value: 0, // This channel hardwired to stdout
     },
     message: {
       tag: "ground",
