@@ -281,4 +281,56 @@ function fresh(reg, ffis) {
       parIn(commJoin.body, {...commJoin.environment, ...bindings}, newRandom);
     }
   }
+
+
+//BIG TODO I suspect all of this logic about finding comms will
+// look very similar to executing comms in the recursive traversal.
+// I'd like to abstract the traversal of the tuplespace away into
+// a helper and just supply find-related stuff here.
+// The big difference is that here I want to return the correct
+// IDs, and over there I want to return the correct bindings.
+// Seems a lot like a different folding function
+
+
+  /**
+   * Inspects the tuplespace to find a single eligible comm event.
+   * TODO maybe find all eligible comms
+   *
+   * @return (joinId, [sendIds])
+   */
+  function findComm() {
+
+    // Loop through the joins
+    for (let join of joins.values()) {
+
+      // Loop thorugh the actions
+      for (let action of join.actions) {
+
+
+      }
+    }
+  }
+
+  /**
+   * Given a join, inspects the tuplespace for a set of sends that will comm with it
+   */
+  function findCommForJoin(join) {
+
+  }
+
+  /**
+   * Given an action, searches the tuplespace for a compatible send
+   * and returns its id.
+   */
+  function findSendForAction(action) {
+    // Loop through all sends on the correct channel
+    for (let send of sends.get(action.chan).values()) {
+      if(patternMatch(action.pattern, send.message) !== false) {
+        return send.id;
+      }
+      else {
+        return false;
+      }
+    }
+  }
 }
