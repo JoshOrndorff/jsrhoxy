@@ -13,7 +13,7 @@ module.exports = {
  * Given an AST, returns a fully concrete version of the same AST.
  * All variables will have been looked up in the appropriate environment.
  * Finally, .equals() and  .hashCode() methods will be attached for proper
- * insertion into the tuplespace.
+ * insertion into the tuplespace, and the AST will be (shallow) frozen.
  *
  * @param term The term to be made concrete
  * @param env The environment bindings to use
@@ -51,7 +51,8 @@ function evaluateInEnvironment (term, env) {
         concreteAction = {
           tag: "action",
           chan: evaluateInEnvironment(action.chan, env),
-          pattern: action.pattern,
+          pattern: action.pattern, // TODO This should be evaluated in environment
+          // for cases like (x, y, =z), so z can be concretized?
         };
         concreteActions.push(concreteAction);
       }
@@ -63,14 +64,8 @@ function evaluateInEnvironment (term, env) {
       // is non-empty, explicit substitution must take place before
       // executing the process
       if ( true /*TODO:  freeNames(term.continuation) subsetof Set(env.ownKeys))*/) {
-        // It's getting tedious to copy each element this way.
-        result = {
-          tag: term.tag,
-          actions: concreteActions,
-          continuation: term.continuation, // normal joins
-          body: term.body, // join*s
-          persistence: term.persistence,
-        };
+        result = { ...term };
+        result.actions = concreteActions;
       }
       else {
         throw "Free names not allowed in continuation. Explicit substitution not yet supported."
@@ -83,11 +78,11 @@ function evaluateInEnvironment (term, env) {
   }
 
   // Tack on the methods and return.
-  return {
+  return Object.freeze({
     ...result,
     equals: (other) => structEquiv(term, other),
     hashCode: hashTerm,
-  };
+  });
 }
 
 
@@ -203,7 +198,7 @@ function structEquiv(a, b) {
  * Computes the hashcode of a given term for purposes
  * of using in immutable js libraries.
  *
- * TODO: Should same hashCode mean structurally equivalent?
+ * Same hashcode means structurally equivalent
  *
  * Terms being passed in here must be fully concrete so that
  * there are no free variable mentions.
