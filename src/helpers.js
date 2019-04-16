@@ -1,12 +1,13 @@
 const { patternMatch } = require('./patternMatcher.js');
 const { Map, List } = require('immutable');
-const { qdHash, mergeRandom } = require('tweetnacl');
+const { qdHash, mergeRandom } = require('./jankyCrypto.js');
 
 module.exports = {
   evaluateInEnvironment,
   mergeRandom, // re-export from jankyCrypto
   commable,
   structEquiv,
+  hashTerm,
 }
 
 /**
@@ -35,11 +36,9 @@ function evaluateInEnvironment (term, env) {
 
     case "send*":
     case "send":
-      result = {
-        tag: "send",
-        chan: evaluateInEnvironment(term.chan, env),
-        message: evaluateInEnvironment(term.message, env),
-      }
+      result = { ...term };
+      result.chan = evaluateInEnvironment(term.chan, env);
+      result.message = evaluateInEnvironment(term.message, env);
       break;
 
 
@@ -80,8 +79,8 @@ function evaluateInEnvironment (term, env) {
   // Tack on the methods and return.
   return Object.freeze({
     ...result,
-    equals: (other) => structEquiv(term, other),
-    hashCode: hashTerm,
+    equals: (other) => (hashTerm(term) === hashTerm(other)) && term.randomState === other.randomState,
+    hashCode: () => hashTerm(term),
   });
 }
 
@@ -150,47 +149,7 @@ function subcommable(action, send) {
  * @return Boolean, whether a and b are structurally equivalent
  */
 function structEquiv(a, b) {
-
-  // Bundles don't affect structural equivalence
-  if (a.tag === 'bundle') {
-    return structEquiv(a.proc, b);
-  }
-
-  if (b.tag === 'bundle') {
-    return structEquiv(a, b.proc);
-  }
-
-  // If tags are different, we can short-circuit
-  if (a.tag !== b.tag) {
-    return false;
-  }
-  // Ground Terms
-  if (a.tag === "ground") {
-    return a.type === b.type && a.value === b.value;
-  }
-
-  // Sends
-  if (a.tag === "send") {
-    return structEquiv(a.chan, b.chan) && structEquiv(a.message, b.message);
-  }
-
-  // Joins
-  if (a.tag === "join") {
-    //TODO
-    // check for same number of actions and fail fast if different
-    // O(n^2) check to see if they pair up correctly
-  }
-
-  // Pars
-  if (a.tag === "par") {
-    //TODO
-    // flatten nested pars and remove all the ground terms
-    // then check whether lengths are equal and fail-fast if not
-    // then O(n^2) check for valid matchings
-  }
-
-  // Should never get here if all valid tags above were checked
-  throw "Non-exhaustive pattern match in structEquiv:" + a.tag;
+  return hashTerm(a) === hashTerm(b);
 }
 
 
@@ -207,9 +166,9 @@ function structEquiv(a, b) {
  */
 function hashTerm(term) {
 
-  //TODO not attaching a hashCode method causes tests to fail, but when
-  // this one is attached, it is never called.
-  console.log("TODO Figure out why this function never gets called");
+  if (term.tag === "bundle") {
+    return hashTerm(term.proc);
+  }
 
   // Hash of each AST is constructed from its tag and the "rest"
   // Rest depends on what type of AST we have.
@@ -227,13 +186,16 @@ function hashTerm(term) {
       throw "hashing send* not yet implemented";
 
     case "send":
-      rest = hashTerm(term.chan) ^ hashTerm(term.message);
+      rest = hashTerm(term.chan) ^ (hashTerm(term.message) << 2);
       break;
 
     case "join*":
       throw "hashing join* not yet implemented";
 
     case "join":
+      //TODO This might not be ideal If listening on the same channel twice,
+      // their hashes will cancel out. Bit-shifting isn't a great solution either
+      // because then commutativity is lost
       for (let action of term.actions) {
         rest ^= hashTerm(action.chan) ^ hashTerm(action.pattern);
       }
@@ -248,8 +210,14 @@ function hashTerm(term) {
       // standard random State so that it will always hash the same.
       throw "hashing new not yet implemented";
 
+    // Patterns need not be evaluated
+    // Actually, why did this ever come up
+    case "variableP":
+      rest = 0;
+      break;
+
     default:
-      throw "Non-exhaustive pattern match in evaluateInEnvironment." + term.tag;
+      throw "Non-exhaustive pattern match in evaluateInEnvironment: " + term.tag;
   }
 
   return (qdHash(term.tag) & rest);

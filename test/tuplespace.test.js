@@ -28,8 +28,7 @@ test('Par in one send', () => {
 
   const concreteChan = evaluateInEnvironment(sendAst.chan, {});
 
-  expect(vm.tuplespaceById().has(1)).toBe(true);
-  expect(vm.sendsByChan().has(concreteChan)).toBe(true);
+  expect(vm.containsTerm(sendAst)).toBe(true);
   expect(vm.joinsByChan().count()).toEqual(0);
 });
 
@@ -37,15 +36,17 @@ test('Par in same send twice', () => {
   vm.deploy(sendAst, 1);
   vm.deploy(sendAst, 2);
 
-  expect(vm.tuplespaceById().has(1)).toBe(true);
-  expect(vm.tuplespaceById().has(2)).toBe(true);
+  const concreteChan = evaluateInEnvironment(sendAst.chan, {});
+
+  expect(vm.sendsByChan().get(concreteChan).size).toBe(2);
   expect(vm.joinsByChan().count()).toEqual(0);
 });
 
-test('Ensure value-equality semantics in tuplespace', () => {
+test('Ensure value-equality semantics for channels in tuplespace', () => {
   // First just make sure we can clone properly
-  const sendClone = { ...sendAst };
-  expect(sendClone === sendAst).toBe(false);
+  let sendClone = { ...sendAst };
+  sendClone.chan = { ... nilAst };
+  expect(sendClone.chan === sendAst.chan).toBe(false);
 
   // Deploy the clones
   vm.deploy(sendAst, 123);
@@ -54,9 +55,7 @@ test('Ensure value-equality semantics in tuplespace', () => {
   // Build a concrete @Nil channel
   const concreteNil = evaluateInEnvironment(nilAst, {})
 
-  // Assertions
-  expect(vm.tuplespaceById().has(123)).toBe(true);
-  expect(vm.tuplespaceById().has(234)).toBe(true);
+  // Make sure both went onto the same channel
   expect(vm.sendsByChan().get(concreteNil).size).toBe(2);
   expect(vm.joinsByChan().count()).toEqual(0);
 })
@@ -65,7 +64,6 @@ test('Par in two different sends', () => {
   vm.deploy(sendAst, 123);
   vm.deploy(send2Ast, 234);
 
-  expect(vm.tuplespaceById().count()).toEqual(2);
   expect(vm.sendsByChan().count()).toEqual(2);
   expect(vm.joinsByChan().count()).toEqual(0);
 });
@@ -74,7 +72,6 @@ test('Par in one send, one ground', () => {
   vm.deploy(sendAst, 123);
   vm.deploy(intAst, 234);
 
-  expect(vm.tuplespaceById().count()).toEqual(1);
   expect(vm.sendsByChan().count()).toEqual(1);
   expect(vm.joinsByChan().count()).toEqual(0);
 });
@@ -90,7 +87,6 @@ test('Par in a Par of two sends', () => {
   vm.deploy(parAst, 123);
 
   expect(vm.sendsByChan().count()).toEqual(1);
-  expect(vm.tuplespaceById().count()).toEqual(2);
   expect(vm.joinsByChan().count()).toEqual(0);
 });
 
@@ -106,7 +102,6 @@ test('Par in a send inside a new', () => {
 
   vm.deploy(newSendAst, 123);
 
-  expect(vm.tuplespaceById().count()).toEqual(1);
   expect(vm.sendsByChan().count()).toEqual(1);
   expect(vm.joinsByChan().count()).toEqual(0);
 });
@@ -117,9 +112,9 @@ test('Par in a single-action join', () => {
 
   vm.deploy(forXAst, 123);
 
-  expect(vm.tuplespaceById().count()).toEqual(1);
   expect(vm.sendsByChan().count()).toEqual(0);
   expect(vm.joinsByChan().count()).toEqual(1);
+  expect(vm.containsTerm(forXAst)).toBe(true);
 });
 
 
@@ -127,7 +122,6 @@ test('Par in a multi-action join', () => {
 
   vm.deploy(forXyAst, 123);
 
-  expect(vm.tuplespaceById().count()).toEqual(1);
   expect(vm.sendsByChan().count()).toEqual(0);
   expect(vm.joinsByChan().count()).toEqual(2);
 });

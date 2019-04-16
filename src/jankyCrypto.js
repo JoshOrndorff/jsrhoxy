@@ -14,6 +14,8 @@ module.exports = {
  * A quick and dirty hash function that will hash anything JSONy.
  * Based on java's string hash and this artcle
  * https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+ * @param data Any JSON-able data to be hashed
+ * @return an integer hash
  */
 function qdHash(data){
   const strData = JSON.stringify(data);
@@ -33,8 +35,7 @@ function qdHash(data){
  * Poor man's  mergeable random state. Merges many random
  * states (integers) into one.
  *
- * @param initials The initial states to merge. Should be immutable Lists
- *                 that will convert successfully to Uint8Arrays.
+ * @param initials The initial random states (integers) to merge
  * @return A new pseudo-random-ish state
  */
 function mergeRandom(initials) {

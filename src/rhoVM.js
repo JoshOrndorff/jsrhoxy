@@ -62,7 +62,6 @@ const standardFfis = [
  * @return interface for interacting with vm
  */
 function fresh(reg, ffis) {
-  let procs = Map();
   let sends = Map();
   let joins = Map();
   let registry = (typeof(reg) === "undefined") ? Map({}) : Map(reg);
@@ -82,13 +81,13 @@ function fresh(reg, ffis) {
     deploy,
     executeComm,
     containsTerm,
-    tuplespaceById: () => Map(procs),
     sendsByChan: () => Map(sends),
     joinsByChan: () => Map(joins),
   };
 
   /**
-   * Check whether a particular rholang term is in the tuplespace
+   * Check whether the tuplespace contains any process structurally
+   * equivalent to the one supplied.
    *
    * Term passed in must be fully concrete
    */
@@ -96,12 +95,16 @@ function fresh(reg, ffis) {
     switch (term.tag) {
       case "send":
       case "send*":
-        return sends.get(term.chan).has(term);
+        const sChan = evaluateInEnvironment(term.chan, {});
+        const sCandidates = sends.get(sChan);
+        return sCandidates.filter((x) => structEquiv(x, term)).size > 0;
 
       case "join":
       case "join*":
         // Only need to look it up by one channel
-        return joins.get(term.actions[0].chan).has(term);
+        const jChan = evaluateInEnvironment(term.actions[0].chan, {});
+        const jCandidates = joins.get(jChan);
+        return jCandidates.filter((x) => structEquiv(x, term)).size > 0;
 
       case "ground":
       case "par":
@@ -118,9 +121,6 @@ function fresh(reg, ffis) {
    * Tells whether the tuplespace is empty
    */
   function isEmpty() {
-    if (procs.count() !== 0) {
-      return false;
-    }
 
     for (let idSet of sends.values()) {
       if (idSet.size !== 0){
@@ -174,27 +174,25 @@ function fresh(reg, ffis) {
       case "send*": // For FFIs akin stdout (maybe date or entropy)
       case "send": {
         // Must be fully concrete to enter tuplespace, so evaluate now
+        term.randomState = randomState;
         let concreteSend = evaluateInEnvironment(term, env);
-        concreteSend.id = randomState;
-        procs = procs.set(randomState, concreteSend);
 
         // https://immutable-js.github.io/immutable-js/docs/#/Map/update
         // update(key: K, notSetValue: V, updater: (value: V) => V): this
-        const updater = (old) => old.add(randomState);
+        const updater = (old) => old.add(concreteSend);
         sends = sends.update(concreteSend.chan, Set(), updater);
         break;
       }
 
       case "join*": // For FFIs like stdout
       case "join":
+        term.randomState = randomState;
+        term.environment = env;
         let concreteJoin = evaluateInEnvironment(term, env);
-        concreteJoin.id = randomState;
-        concreteJoin.environment = env;
-        procs = procs.set(randomState, concreteJoin);
 
         // Now go through and put each channel in the map
-        for (let {chan} of term.actions) {
-          const updater = (old) => old.add(randomState);
+        for (let {chan} of concreteJoin.actions) {
+          const updater = (old) => old.add(concreteJoin);
           joins = joins.update(chan, Set(), updater);
         }
         break;
@@ -231,16 +229,12 @@ function fresh(reg, ffis) {
 
   /**
    * Performs a single comm reduction on a tuplespace
-   * @param joinId Id of the join to be commed
-   * @param sendIds List of Ids of sends to be commed
-   * @return A new tuplespace updated according to the reduction
+   * @param commJoin The join to be commed
+   * @param commSends List of sends to be commed
    * @throws If the comm supplied is not valid
    */
-  function executeComm(joinId, sendIds) {
+  function executeComm(commJoin, commSends) {
 
-    // Grab the join and send objects from the tuplespace
-    const commJoin = procs.get(joinId);
-    const commSends = sendIds.map(sId => procs.get(sId));
 
     // Make sure the specified processes are actually commable, and
     // get the new bindings
@@ -250,27 +244,26 @@ function fresh(reg, ffis) {
     }
 
     // Figure out which IDs to remove from the tuplespace
-    const allIds = Set(sendIds.concat([joinId])).filter(removable);
-    function removable(id) {
-      let p = procs.get(id);
-      return p.persistence === undefined || p.persistence-- === 0;
+    const allParents = Set(commSends.concat([commJoin]));
+    const removable = allParents.filter(isPersistent);
+    function isPersistent(p) {
+      return !(p.persistence === undefined || p.persistence-- === 0);
     }
 
     // Not sure what's up with the v, k ordering
     // https://immutable-js.github.io/immutable-js/docs/#/Set/subtract
-    procs = procs.deleteAll(allIds);
-    sends = sends.map((v, k) => v.subtract(allIds));
-    joins = joins.map((v, k) => v.subtract(allIds));
-
+    sends = sends.map((v, k) => v.subtract(removable));
+    joins = joins.map((v, k) => v.subtract(removable));
 
     // Calculate the new random state.
-    const newRandom = mergeRandom(allIds)
+    const newRandom = mergeRandom(allParents.map((parent) => parent.randomState))
 
     // Handle all of the system sends
     for (let send of commSends.filter(x => x.tag === "send*")) {
       //TODO
     }
 
+    // Handle the system receives
     if (commJoin.tag === "join*") {
       // Call the system function
       commJoin.body(bindings);

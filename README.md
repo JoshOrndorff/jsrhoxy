@@ -9,48 +9,13 @@ Right now not much is working, but there is a parser, a tuplespace, and basic co
 
 Usage
 -----
-Clone this repo
-run the tests
-Write rholang
-aspirational: run the code you just wrote.
+* Clone this repo `git clone https://github.com/JoshOrndorff/jsrhoxy`
+* Install dependencies `npm install`
+* (Optional) Run the tests `npm run test`
+* Write rholang code ``new stdout(`rho:io:stdout`) in {stdout!("Hello World")}``
+* aspirational: run the code you just wrote
 
-Virtual Machine Architecture
--------------
-It's likely that the entire tuplespace will be converted to use immutable data structures, but right not the top level entity is a regular javascript object.
-It's also possible that the tuplespace may be re-written in object-oriented typescript.
-Finally, the tuplespace may be modified to cache available comms, but right now there is no caching.
-```
-// The numbers are a unique id / poor-mans-pseudo-random-state
-// associated with each send or receive.  They are immutable Lists containing values that fit into Uint8Array items.
-{
-  // A Map from id's to process ASTs
-  procs: Map {
-    123: {tag: "send", ...},
-    234: {tag: "send", ...},
-    345: {tag: "send", ...},
-    567: {tag: "join", ...}
-  },
-  // A channel-indexed list of all sends
-  sends: Map {
-    chan1: Set [
-      123
-    ],
-    chan2: Set [
-      234,
-      345
-  ],
-  // Channel-indexed list of all joins. There will be dupes, because
-  // multi-action joins appear in multiple lists.
-  joins: Map {
-    chan1: Set[
-      567
-    ],
-    chan2: Set[
-      567
-    ]
-  }
-}
-```
+
 
 Terms and ASTs
 --------------

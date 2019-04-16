@@ -23,8 +23,8 @@ beforeEach(() => {
 test('Most basic comm', () => {
 
   // Deploy the pieces seperately to easily set their ids
-  pureVM.deploy(forXAst, List([1, 2]));
-  pureVM.deploy(sendAst, List([2, 3]));
+  pureVM.deploy(forXAst, 12);
+  pureVM.deploy(sendAst, 23);
 
   // Perform the comm event
   pureVM.executeComm(List([1, 2]), [List([2, 3])]);
