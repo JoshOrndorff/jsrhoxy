@@ -51,6 +51,8 @@ proc ->
         uri,
         body
       }) %}
+  # This really should be zero or more stars, but Nil is parsing as variable
+  | "*":+ variable {% ([,v]) => v %}
 
 uri -> [a-zA-Z0-9:]:* {% id %}
 
@@ -64,6 +66,7 @@ actions ->
            # Parsers always return a one-deeper list
   # TODO multiple actions doesn't seem to work yet. Ambiguous grammar.
   # nearley-test rhoxyGrammar.js --input "x <- @Nil; y <- @Nil"
+  # https://nearley.js.org/docs/how-to-grammar-good says "don't roll your own unroller"
   | actions _ ";" _ action
       {% ([actions,,,,action]) =>
         actions.concat([action])

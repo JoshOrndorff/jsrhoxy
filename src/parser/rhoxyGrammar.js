@@ -177,6 +177,9 @@ var grammar = {
           uri,
           body
         }) },
+    {"name": "proc$ebnf$1", "symbols": [{"literal":"*"}]},
+    {"name": "proc$ebnf$1", "symbols": ["proc$ebnf$1", {"literal":"*"}], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "proc", "symbols": ["proc$ebnf$1", "variable"], "postprocess": ([,v]) => v},
     {"name": "uri$ebnf$1", "symbols": []},
     {"name": "uri$ebnf$1", "symbols": ["uri$ebnf$1", /[a-zA-Z0-9:]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "uri", "symbols": ["uri$ebnf$1"], "postprocess": id},
