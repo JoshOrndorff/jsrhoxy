@@ -163,14 +163,27 @@ var grammar = {
         }) },
     {"name": "proc$string$3", "symbols": [{"literal":"n"}, {"literal":"e"}, {"literal":"w"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "proc$string$4", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$3", "__", "variables", "__", "proc$string$4", "_", "proc"], "postprocess":  ([,,vars,,,,body]) => {
-          return {
+    {"name": "proc", "symbols": ["proc$string$3", "__", "variables", "__", "proc$string$4", "_", "proc"], "postprocess":  ([,,vars,,,,body]) => ({
             tag: "new",
             vars,
             body
-          }
-        }
-              },
+        }) },
+    {"name": "proc$string$5", "symbols": [{"literal":"("}, {"literal":"`"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc$string$6", "symbols": [{"literal":"`"}, {"literal":")"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc$string$7", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc", "symbols": ["lookup", "__", "variable", "proc$string$5", "uri", "proc$string$6", "_", "proc$string$7", "_", "proc"], "postprocess":  ([,,v,uri,,,,body]) => ({
+          tag: "lookup",
+          v,
+          uri,
+          body
+        }) },
+    {"name": "uri$ebnf$1", "symbols": []},
+    {"name": "uri$ebnf$1", "symbols": ["uri$ebnf$1", /[a-zA-Z0-9:]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "uri", "symbols": ["uri$ebnf$1"], "postprocess": id},
+    {"name": "lookup$string$1", "symbols": [{"literal":"n"}, {"literal":"e"}, {"literal":"w"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "lookup", "symbols": ["lookup$string$1"]},
+    {"name": "lookup$string$2", "symbols": [{"literal":"l"}, {"literal":"o"}, {"literal":"o"}, {"literal":"k"}, {"literal":"u"}, {"literal":"p"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "lookup", "symbols": ["lookup$string$2"], "postprocess": (d) => null},
     {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
     {"name": "actions", "symbols": ["action"]},
     {"name": "actions", "symbols": ["actions", "_", {"literal":";"}, "_", "action"], "postprocess":  ([actions,,,,action]) =>

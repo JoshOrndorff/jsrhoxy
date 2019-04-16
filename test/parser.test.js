@@ -302,3 +302,16 @@ test('new x, y', () => {
 
   expect(parser.results[0]).toEqual(expected);
 });
+
+// Test for lookup parser
+test('Basic Lookup', () => {
+  parser.feed("lookup stdout(`rho:io:stdout`) in {Nil}");
+})
+
+test('Basic Lookup (Coop new Syntax)', () => {
+  parser.feed("new stdout(`rho:io:stdout`) in {Nil}");
+})
+
+test.skip('Multiple Lookup', () => {
+  parser.feed("lookup stdout(`rho:io:stdout`), stderr(`rho:io:stderr`) in {Nil}");
+})

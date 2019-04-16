@@ -37,17 +37,24 @@ proc ->
         proc
       }) %}
   | "new" __ variables __ "in" _ proc
-      {% ([,,vars,,,,body]) => {
-          return {
-            tag: "new",
-            vars,
-            body
-          }
-        }
-      %}
+      {% ([,,vars,,,,body]) => ({
+          tag: "new",
+          vars,
+          body
+      }) %}
+  # TODO support multiple bindings Prolly worth fixing parse ambiguity discovered
+  # in actions first though. For now I'll just want standard out anyway.
+  | lookup __ variable "(`" uri "`)" _ "in" _ proc
+      {% ([,,v,uri,,,,body]) => ({
+        tag: "lookup",
+        v,
+        uri,
+        body
+      }) %}
 
+uri -> [a-zA-Z0-9:]:* {% id %}
 
-
+lookup -> "new" | "lookup" {% (d) => null %}
 
 chan -> "@" proc {% ([,c]) => c %}
 
