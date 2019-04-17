@@ -45,7 +45,7 @@ proc ->
   # TODO support multiple bindings Prolly worth fixing parse ambiguity discovered
   # in actions first though. For now I'll just want standard out anyway.
   | lookup __ variable "(`" uri "`)" _ "in" _ proc
-      {% ([,,v,uri,,,,body]) => ({
+      {% ([,,v,,uri,,,,,body]) => ({
         tag: "lookup",
         v,
         uri,
@@ -54,7 +54,7 @@ proc ->
   # This really should be zero or more stars, but Nil is parsing as variable
   | "*":+ variable {% ([,v]) => v %}
 
-uri -> [a-zA-Z0-9:]:* {% id %}
+uri -> [a-zA-Z0-9:]:* {% ([l]) => l.join('') %}
 
 lookup -> "new" | "lookup" {% (d) => null %}
 

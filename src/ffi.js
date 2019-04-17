@@ -1,3 +1,4 @@
+const { prettyPrint } = require('./helpers.js');
 
 module.exports = [
   {
@@ -13,7 +14,7 @@ module.exports = [
         chan: 'rho:io:stdout',
       }
     ],
-    body: (bindings) => {console.log(bindings.get("msg"))}
+    body: (bindings) => {console.log(prettyPrint(bindings.get("msg")))}
   },
   {
     tag: "join*",
@@ -28,6 +29,6 @@ module.exports = [
         chan: 'rho:io:stderr',
       }
     ],
-    body: (bindings) => {console.error(bindings.msg)}
+    body: (bindings) => {console.error(prettyPrint(bindings.get("msg")))}
   }
 ]

@@ -1,22 +1,33 @@
 const nearley = require("nearley");
 const grammar = require("./parser/rhoxyGrammar.js");
 const rhoVM = require('./rhoVM.js');
-const { randomBytes } = require('tweetnacl');
+const { findCommsFor } = require('./helpers.js');
+const { readFileSync } = require('fs');
 
 // Create a Parser object from our grammar
 const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
 
-// Read in and parse the code
-const term = parser.feed("Nil").results[0];
-console.log(term);
+// Open file from the args
+const filename = process.argv[2];
+const code = readFileSync(filename, 'utf8');
+
+// Parse the source file
+const term = parser.feed(code).results[0];
 
 // Create a new tuplespace and deploy the code supplied
-const ts = rhoVM.fresh();
-const newTs = rhoVM.deploy(ts, term, randomBytes(8)); // No need to hog up entropy while I'm just fuxing around
+const vm = rhoVM();
+vm.deploy(term, 1);
 
-// Check to make sure it is in correctly
-console.log("The final state is");
-console.log(newTs);
+// Grab a receive (for now just hope it's the one we want)
+const join = vm.getArbitraryJoin();
+
+// Find a valid comm
+const allSends = findCommsFor(join, vm.sendsByChan());
+const chosenSends = allSends[0];
+
+// Perform the requested comm
+vm.executeComm(join, chosenSends)
+
 
 
 

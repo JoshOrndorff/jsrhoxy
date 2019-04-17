@@ -129,12 +129,19 @@ function fresh(ffis) {
    * @throws Parese errors
    */
   function deploy(term, seed) {
-    //TODO since registry lookups only happen at the topmost level
-    // in rhoxy, handle them here, then move on the parIn
-
+    // Registry lookups only happen at the topmost level so handle them here
+    let env = {};
+    let deployTerm = term;
+    if (term.tag === "lookup") {
+      //TODO loop through the various lookups
+      //for () {
+        env[term.v.givenName] = registry.get(term.uri);
+      //}
+      deployTerm = term.body;
+    }
     // TODO eventually we'll want to hash the seed, but for now it's useful
-    // to manually assign ids.
-    return parIn(term, {}, seed);
+    // to manually assign randomState.
+    parIn(deployTerm, env, seed);
   }
 
   /**
@@ -205,6 +212,9 @@ function fresh(ffis) {
         // Then recurse adding those bindings to the environment
         return parIn(term.body, {...env, ...newBindings}, nextStates[vs.length]);
       }
+
+      default:
+        throw "Non-exhaustive pattern match in par-in: " + term.tag;
     }
   }
 

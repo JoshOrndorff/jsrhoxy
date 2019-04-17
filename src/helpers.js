@@ -10,6 +10,7 @@ module.exports = {
   hashTerm,
   findSubCommsFor,
   findCommsFor,
+  prettyPrint,
 }
 
 /**
@@ -289,4 +290,34 @@ function findCommsFor(join, sendsMap) {
  */
 function findSubCommsFor(action, sendsMap) {
   return sendsMap.get(action.chan, Set()).filter((send) => subcommable(action, send) !== false);
+}
+
+/**
+ * Turns any rholang term (atm mostly ground terms)into a
+ * reasonable looking string preresentation.
+ *
+ * @param term The term to be rendered
+ * @return A string version of the supplied term
+ */
+function prettyPrint(term) {
+  switch (term.tag) {
+    case "ground":
+      switch (term.type) {
+        case "string":
+          return term.value;
+
+        case "bool":
+        case "int":
+          return JSON.stringify(term.value)
+
+        default:
+          throw "Non-exhaustive pattern match in prettyPrintern ground types: " + term.type;
+      }
+
+    case "send":
+      return "@" + prettyPrint(term.chan) + "!(" + prettyPrint(term.message) + ")";
+
+    default:
+      throw "Non-exhaustive pattern match in prettyPrint: " + term.tag;
+  }
 }
