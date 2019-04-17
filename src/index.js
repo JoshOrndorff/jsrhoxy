@@ -18,18 +18,27 @@ const term = parser.feed(code).results[0];
 const vm = rhoVM();
 vm.deploy(term, 1);
 
-// Grab a receive (for now just hope it's the one we want)
-const join = vm.getArbitraryJoin();
+//Start the reduction loop
+let quiescent = false;
+while (!quiescent) {
+  // Grab all the joins in the tuplespace
+  const allJoins = vm.allJoins();
 
-// Find a valid comm
-const allSends = findCommsFor(join, vm.sendsByChan());
-const chosenSends = allSends[0];
+  quiescent = true;
+  for (let join of allJoins) {
 
-// Perform the requested comm
-vm.executeComm(join, chosenSends)
+    // Look for a valid comm
+    const allSends = findCommsFor(join, vm.sendsByChan());
 
-
-
+    // If we found a valid comm, perform it
+    if (allSends.length > 0) {
+      const chosenSends = allSends[0];
+      vm.executeComm(join, chosenSends);
+      quiescent = false;
+      break;
+    }
+  }
+}
 
 
 // Idea for main program / library

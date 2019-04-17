@@ -57,12 +57,20 @@ function fresh(ffis) {
     joinsByChan: () => Map(joins),
     getArbitraryJoin: () => joins.first().first(),
     allSends,//: sends.reduce(((acc, v, k) => acc.add(v)), Set()),
-    //allJoins:joins.reduce(((acc, v, k) => acc.add(v)), Set()),
+    allJoins,//:joins.reduce(((acc, v, k) => acc.add(v)), Set()),
   };
 
+  //TODO Can't these be nice one-liners like above?
   function allSends() {
     let all = Set();
     for (let currentSet of sends.values()) {
+      all = all.union(currentSet);
+    }
+    return all;
+  }
+  function allJoins() {
+    let all = Set();
+    for (let currentSet of joins.values()) {
       all = all.union(currentSet);
     }
     return all;
