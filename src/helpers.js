@@ -82,8 +82,8 @@ function evaluateInEnvironment (term, env) {
   // Tack on the methods and return.
   return Object.freeze({
     ...result,
-    equals: (other) => (hashTerm(term) === hashTerm(other)) && term.randomState === other.randomState,
-    hashCode: () => hashTerm(term),
+    equals: (other) => (hashTerm(result) === hashTerm(other)) && result.randomState === other.randomState,
+    hashCode: () => hashTerm(result),
   });
 }
 
@@ -225,7 +225,7 @@ function hashTerm(term) {
       break;
 
     default:
-      throw "Non-exhaustive pattern match in evaluateInEnvironment: " + term.tag;
+      throw "Non-exhaustive pattern match in hashTerm: " + term.tag;
   }
 
   return (qdHash(term.tag) & rest);
