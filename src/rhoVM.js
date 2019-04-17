@@ -2,78 +2,50 @@ const { Map, Set, List } = require('immutable');
 const { hash } = require('tweetnacl');
 const { evaluateInEnvironment, commable, structEquiv } = require('./helpers.js');
 const { splitRandom, mergeRandom } = require('../src/jankyCrypto.js');
+const ffis = require('./ffi.js');
 
 
-module.exports = () => fresh(standardRegistry, standardFfis);
-module.exports.pure = () => fresh({}, {});
+module.exports = () => fresh(ffis);
+module.exports.pure = () => fresh([]);
 
-const standardRegistry = {
-  'rho:io:stdout': 0,
-  'rho:io:stdoutAck': 1,
-  'rho:io:stderr': 2,
-  'rho:io:stderrAck': 3,
-};
-
-const standardFfis = [
-  {
-    tag: "join*",
-    persistence: 999, //Hack; Only 999 stdout prints can happen in vm
-    actions: [
-      {
-        tag: "action",
-        pattern: {
-          tag: "variableP",
-          givenName: "msg",
-        },
-        chan: {
-          tag: "ground",
-          type: "unforgeable",
-          value: standardRegistry['rho:io:stdout'],
-        }
-      }
-    ],
-    body: (bindings) => {console.log(bindings.get("msg"))}
-  },
-  {
-    tag: "join*",
-    persistence: 999,
-    actions: [
-      {
-        tag: "action",
-        pattern: {
-          tag: "variableP",
-          givenName: "msg",
-        },
-        chan: {
-          tag: "ground",
-          type: "unforgeable",
-          value: standardRegistry['rho:io:stderr'],
-        },
-      }
-    ],
-    body: (bindings) => {console.error(bindings.msg)}
-  }
-]
 
 /**
- * Construct a fresh empty instance of the rho virtual machine.
- * @param reg Object representing initial registry entries
- * @param ffis Array of foreign functions to be added to the tuplespace
+ * Construct a fresh instance of the rho virtual machine.
+ * @param ffis Object of functions to be added to the tuplespace and registry.
  * @return interface for interacting with vm
  */
-function fresh(reg, ffis) {
+function fresh(ffis) {
   let sends = Map();
   let joins = Map();
-  let registry = (typeof(reg) === "undefined") ? Map({}) : Map(reg);
+  let registry = Map();
 
-  // Go through and put all of the ffis in place
-  for (let i = 0; i < ffis.length; i++) {
-    let ffi = ffis[i];
-    if (ffi.tag !== "send*" && ffi.tag !== "join*") {
-      throw "Only join* and send* ffis are supported";
+  // Go through and put all of the ffi in place
+  let i = 0;
+  for (let ffi of ffis) {
+    const nextChan = {tag: "ground", type: "unforgeable", value: i};
+
+    switch (ffi.tag) {
+      case "send*":
+        throw "FFI sends, not yet supported";
+        break;
+
+      case "join*":
+        for (let action of ffi.actions) {
+          const uri = action.chan;
+          action.chan = nextChan;
+          const concreteChan = evaluateInEnvironment({ ...nextChan}, {});
+          registry = registry.set(uri, concreteChan);
+        }
+        break;
+
+      default:
+        throw "Only join* and send* ffis are supported";
     }
 
-    parIn(ffi, {}, i);
+    // Need some initial random state, may as well use the first index in the proc.
+    // Add 1000 to avoid confilct with hardcoded randomStates used for tests right now.
+    parIn(ffi, {}, 1000 + i);
+    i += 1;
   }
 
   return {
