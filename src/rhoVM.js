@@ -56,8 +56,17 @@ function fresh(ffis) {
     sendsByChan: () => Map(sends),
     joinsByChan: () => Map(joins),
     getArbitraryJoin: () => joins.first().first(),
+    allSends,//: sends.reduce(((acc, v, k) => acc.add(v)), Set()),
+    //allJoins:joins.reduce(((acc, v, k) => acc.add(v)), Set()),
   };
 
+  function allSends() {
+    let all = Set();
+    for (let currentSet of sends.values()) {
+      all = all.union(currentSet);
+    }
+    return all;
+  }
   /**
    * Check whether the tuplespace contains any process structurally
    * equivalent to the one supplied.

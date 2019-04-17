@@ -191,16 +191,21 @@ function hashTerm(term) {
       rest = hashTerm(term.chan) ^ (hashTerm(term.message) << 2);
       break;
 
-    case "join*":
-      throw "hashing join* not yet implemented";
+    case "join":
 
     case "join":
+    // Consider the continuation
+    rest ^= hashTerm(term.body);
+    // No break, so fall thorugh to remaining behavior that also applies to join*
+
+    case "join*":
       //TODO This might not be ideal If listening on the same channel twice,
       // their hashes will cancel out. Bit-shifting isn't a great solution either
       // because then commutativity is lost
       for (let action of term.actions) {
         rest ^= hashTerm(action.chan) ^ hashTerm(action.pattern);
       }
+
       break;
 
     case "par":

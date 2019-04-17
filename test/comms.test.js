@@ -60,10 +60,18 @@ test('Hello World', () => {
   // Deploy the send
   vm.deploy(sendTree, 12);
 
+  // Grab the receive (ensure it's the _right_ receive later by using lookup)
+  const join = vm.getArbitraryJoin();
+
+  // Grab all (one) valid comms
+  const allSends = findCommsFor(join, vm.sendsByChan());
+  const chosenSends = allSends[0];
+
   // Perform the comm event
-  vm.executeComm(0, [12]);
+  vm.executeComm(join, chosenSends);
 
   // Expect an "empty" tuplespace when done
   // Standard tuplespace has 2 persistent items
-  expect(vm.tuplespaceById().count()).toBe(2);
+  expect(vm.allSends().size).toBe(0);
+  //expect(vm.allJoins()size).toBe(0);
 });
