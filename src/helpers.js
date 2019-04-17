@@ -261,7 +261,7 @@ function findCommsFor(join, sendsMap) {
     let finds = [];
     for (let actionIndex in actions) {
       const action = actions[actionIndex];
-      const remainingActions = actions.splice(actionIndex, 1);
+      const remainingActions = actions.slice(0,actionIndex).concat(actions.slice(actionIndex + 1));
       const compatibleSends = findSubCommsFor(action, sendsMap);
 
       for (let send of compatibleSends.values()) {

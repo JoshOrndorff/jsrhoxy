@@ -19,7 +19,7 @@ function fresh(ffis) {
   let joins = Map();
   let registry = Map();
 
-  // Go through and put all of the ffi in place
+  // Go through and put all of the ffis in place
   let i = 0;
   for (let ffi of ffis) {
     const nextChan = {tag: "ground", type: "unforgeable", value: i};
@@ -55,6 +55,7 @@ function fresh(ffis) {
     containsTerm,
     sendsByChan: () => Map(sends),
     joinsByChan: () => Map(joins),
+    getArbitraryJoin: () => joins.first().first(),
   };
 
   /**
@@ -217,9 +218,9 @@ function fresh(ffis) {
 
     // Figure out which IDs to remove from the tuplespace
     const allParents = Set(commSends.concat([commJoin]));
-    const removable = allParents.filter(isPersistent);
-    function isPersistent(p) {
-      return !(p.persistence === undefined || p.persistence-- === 0);
+    const removable = allParents.filter(isRemovable);
+    function isRemovable(p) {
+      return (p.persistence === undefined || p.persistence-- === 0);
     }
 
     // Not sure what's up with the v, k ordering

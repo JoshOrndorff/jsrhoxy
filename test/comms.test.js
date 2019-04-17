@@ -1,7 +1,6 @@
 const rhoVM = require('../src/rhoVM.js');
 const { randomBytes } = require('tweetnacl');
-//const nearley = require("nearley");
-//const grammar = require("../rhoxyGrammar.js");
+const { findCommsFor } = require('../src/helpers');
 const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst } = require('./trees.js');
 const { List } = require('immutable');
 
@@ -26,8 +25,15 @@ test('Most basic comm', () => {
   pureVM.deploy(forXAst, 12);
   pureVM.deploy(sendAst, 23);
 
+  // Grab the join
+  const join = pureVM.getArbitraryJoin();
+
+  // Grab all (one) valid comms
+  const allSends = findCommsFor(join, pureVM.sendsByChan());
+  const chosenSends = allSends[0];
+
   // Perform the comm event
-  pureVM.executeComm(List([1, 2]), [List([2, 3])]);
+  pureVM.executeComm(join, chosenSends);
 
   // Expect an empty tuplespace when done
   expect(pureVM.isEmpty()).toBe(true);
