@@ -1,5 +1,5 @@
 const { patternMatch } = require('./patternMatcher.js');
-const { Map, List } = require('immutable');
+const { Map, List, Set } = require('immutable');
 const { qdHash, mergeRandom } = require('./jankyCrypto.js');
 
 module.exports = {
@@ -8,6 +8,8 @@ module.exports = {
   commable,
   structEquiv,
   hashTerm,
+  findSubCommsFor,
+  findCommsFor,
 }
 
 /**
@@ -236,4 +238,50 @@ function freeNames(term) {
     case "send":
       return send.chan
   }
+}
+
+/**
+ * Finds all possible comms for the given join and given sends.
+ *
+ * @param join A join AST to find sends to comm with
+ * @param sendsMap A map from channels to sends on those channels
+ *          in the style of the tuplespace
+ * @return a list of lists of sends
+ */
+function findCommsFor(join, sendsMap) {
+  return helper(join.actions, sendsMap);
+
+  function helper(actions, sendsMap) {
+    // Terminating case for the recursion
+    if (actions.size === 0) {
+      return [];
+    }
+
+    // Otherwise start making matches
+    let finds = [];
+    for (let actionIndex in actions) {
+      const action = actions[actionIndex];
+      const remainingActions = actions.splice(actionIndex, 1);
+      const compatibleSends = findSubCommsFor(action, sendsMap);
+
+      for (let send of compatibleSends.values()) {
+        const remainingSends = sendsMap.update(action.chan, (old) => old.remove(send));
+
+        remnantMatches = helper(remainingActions, remainingSends);
+        finds.push([send].concat(remnantMatches));
+      }
+    }
+  return finds;
+  }
+}
+
+/**
+ * Finds all sends that subComm with the given action.
+ * @param a single action
+ * @param sendsMap A map from channels to sends on those channels
+ *          in the style of the tuplespace
+ * @return An immutable Set of all usable sends
+ */
+function findSubCommsFor(action, sendsMap) {
+  return sendsMap.get(action.chan, Set()).filter((send) => subcommable(action, send) !== false);
 }
