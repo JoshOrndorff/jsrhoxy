@@ -5,7 +5,7 @@ Rhoxy is a family of interpreters for the [rholang](https://rholang.org/wiki) pr
 
 This project strives to be a complete but minimal implementation of rholang as well as a learning and exploration tool.
 
-Right now not much is working, but there is a parser, a tuplespace, and basic comm support. The colab did a code walkthrough on 05 Feb 2019. [Part 1](https://youtu.be/Id0kujWyNf4) is on youtube, but Part 2 was lost.
+Right now not much is working, but there is a parser, a tuplespace, and basic comm support. The colab did a code walkthrough on 05 April 2019. [Part 1](https://youtu.be/Id0kujWyNf4) is on youtube, but Part 2 was lost.
 
 Usage
 -----
