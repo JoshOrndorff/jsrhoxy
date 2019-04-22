@@ -193,7 +193,7 @@ var grammar = {
         actions.concat([action])
                },
     {"name": "action$string$1", "symbols": [{"literal":"<"}, {"literal":"-"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "action", "symbols": ["_", "pattern", "_", "action$string$1", "_", "chan", "_"], "postprocess":  ([,pattern,,,,chan,]) => ({
+    {"name": "action", "symbols": ["pattern", "_", "action$string$1", "_", "chan"], "postprocess":  ([pattern,,,,chan]) => ({
           tag: "action",
           pattern,
           chan

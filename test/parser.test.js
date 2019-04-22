@@ -155,6 +155,7 @@ test('two-action join', () => {
     body: nilAst,
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 

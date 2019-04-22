@@ -16,6 +16,7 @@ proc ->
       }) %}
 
   | "for" _ "(" _ actions _ ")" _ "{" _ proc _ "}"
+  #TODO Kent suggested 0 joins might be okay in the normilization atlassian article
       {% ([,,,,actions,,,,,,body,,]) => ({
         tag: 'join',
         actions,
@@ -42,8 +43,7 @@ proc ->
           vars,
           body
       }) %}
-  # TODO support multiple bindings Prolly worth fixing parse ambiguity discovered
-  # in actions first though. For now I'll just want standard out anyway.
+  # TODO support multiple bindings in a lookup.
   | lookup __ variable "(`" uri "`)" _ "in" _ proc
       {% ([,,v,,uri,,,,,body]) => ({
         tag: "lookup",
@@ -64,17 +64,14 @@ chan -> "@" proc {% ([,c]) => c %}
 actions ->
     action # Don't manually put this in a list {% d => [d] %}
            # Parsers always return a one-deeper list
-  # TODO multiple actions doesn't seem to work yet. Ambiguous grammar.
-  # nearley-test rhoxyGrammar.js --input "x <- @Nil; y <- @Nil"
-  # https://nearley.js.org/docs/how-to-grammar-good says "don't roll your own unroller"
   | actions _ ";" _ action
       {% ([actions,,,,action]) =>
         actions.concat([action])
        %}
 
 
-action -> _ pattern _ "<-" _ chan _
-  {% ([,pattern,,,,chan,]) => ({
+action -> pattern _ "<-" _ chan
+  {% ([pattern,,,,chan]) => ({
     tag: "action",
     pattern,
     chan
@@ -88,7 +85,6 @@ variable ->
       givenName: n + ame.join('')
     }) %}
 
-# TODO this is copied from "actions" which gives an ambiguous grammar.
 variables ->
     variable
   | variables _ "," _ variable
