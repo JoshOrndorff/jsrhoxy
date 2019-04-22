@@ -22,15 +22,7 @@ proc ->
         actions,
         body
       }) %}
-  | proc _ "|" _ proc
-      {% ([p1,,,,p2]) => {
-        ps1 = p1.tag === "par" ? p1.procs : [p1]
-        ps2 = p2.tag === "par" ? p2.procs : [p2]
-        return {
-          tag: "par",
-          procs: ps1.concat(ps2)
-        }
-      } %}
+  | par {% id %}
   | "bundle" _ "{" proc "}"
       # For now bundles are only to prevent destructuring. Not read-write restriction.
       {% ([,,,proc,]) => ({
@@ -60,6 +52,15 @@ lookup -> "new" | "lookup" {% (d) => null %}
 
 chan -> "@" proc {% ([,c]) => c %}
 
+par ->
+    proc
+  | par _ "|" _ proc
+    {% ([par,,,,proc]) => {
+      return {
+        tag: "par",
+        procs: par.procs.concat([proc])
+      }
+    } %}
 
 actions ->
     action # Don't manually put this in a list {% d => [d] %}

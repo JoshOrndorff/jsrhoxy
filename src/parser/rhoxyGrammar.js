@@ -148,14 +148,7 @@ var grammar = {
           actions,
           body
         }) },
-    {"name": "proc", "symbols": ["proc", "_", {"literal":"|"}, "_", "proc"], "postprocess":  ([p1,,,,p2]) => {
-          ps1 = p1.tag === "par" ? p1.procs : [p1]
-          ps2 = p2.tag === "par" ? p2.procs : [p2]
-          return {
-            tag: "par",
-            procs: ps1.concat(ps2)
-          }
-        } },
+    {"name": "proc", "symbols": ["par"], "postprocess": id},
     {"name": "proc$string$2", "symbols": [{"literal":"b"}, {"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"l"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "proc", "symbols": ["proc$string$2", "_", {"literal":"{"}, "proc", {"literal":"}"}], "postprocess":  ([,,,proc,]) => ({
           tag: "bundle",
@@ -188,6 +181,13 @@ var grammar = {
     {"name": "lookup$string$2", "symbols": [{"literal":"l"}, {"literal":"o"}, {"literal":"o"}, {"literal":"k"}, {"literal":"u"}, {"literal":"p"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "lookup", "symbols": ["lookup$string$2"], "postprocess": (d) => null},
     {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
+    {"name": "par", "symbols": ["proc"]},
+    {"name": "par", "symbols": ["par", "_", {"literal":"|"}, "_", "proc"], "postprocess":  ([par,,,,proc]) => {
+          return {
+            tag: "par",
+            procs: par.procs.concat([proc])
+          }
+        } },
     {"name": "actions", "symbols": ["action"]},
     {"name": "actions", "symbols": ["actions", "_", {"literal":";"}, "_", "action"], "postprocess":  ([actions,,,,action]) =>
         actions.concat([action])
