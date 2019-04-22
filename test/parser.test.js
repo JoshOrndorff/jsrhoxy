@@ -11,12 +11,14 @@ beforeEach(() => {
 test('Simple Nil', () => {
   parser.feed("Nil");
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(nilAst);
 });
 
 test('Nil w/ whitespace', () => {
   parser.feed("    Nil \t ");
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(nilAst);
 });
 
@@ -30,6 +32,7 @@ test('Simple int', () => {
     value: 23
   }
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -42,6 +45,7 @@ test('Positive int', () => {
     value: 4132
   }
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -54,6 +58,7 @@ test('Negative int', () => {
     value: -32
   }
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -67,6 +72,7 @@ test("simple String", () => {
     value: "banana",
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 })
 
@@ -80,6 +86,7 @@ test('true', () => {
     value: true
   }
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -92,6 +99,7 @@ test('false', () => {
     value: false
   }
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -99,6 +107,7 @@ test('false', () => {
 test('Basic Send', () => {
   parser.feed("@Nil!(Nil)");
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(sendAst);
 });
 
@@ -119,6 +128,7 @@ test('Send w/ grounds', () => {
     }
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -171,6 +181,7 @@ test('Basic Par', () => {
     ]
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -185,6 +196,7 @@ test('Send | Nil', () => {
     ]
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -200,6 +212,7 @@ test('Three-Nil Par', () => {
     ]
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -215,6 +228,7 @@ test('Par w/ whitespace', () => {
     ]
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -227,6 +241,7 @@ test('Basic Bundle', () => {
     proc: nilAst
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -238,6 +253,7 @@ test('Bundle w/ space', () => {
     proc: nilAst
   };
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -245,6 +261,7 @@ test('Bundle w/ space', () => {
 test('Comment 1', () => {
   parser.feed("/* comment */ Nil");
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(nilAst);
 });
 
@@ -256,12 +273,14 @@ test('Comment 2', () => {
   // That would make requiring the \n acceptible expected parser behavior.
   parser.feed("Nil // comment\n");
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(nilAst);
 });
 
 test('Comment 3', () => {
   parser.feed("@Nil/**/!(/**/Nil)//dasfasdf\n/**/");
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(sendAst);
 });
 
@@ -280,6 +299,7 @@ test('new x', () => {
     body: nilAst,
   }
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
@@ -301,18 +321,25 @@ test('new x, y', () => {
     body: nilAst,
   }
 
+  expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(expected);
 });
 
 // Test for lookup parser
 test('Basic Lookup', () => {
   parser.feed("lookup stdout(`rho:io:stdout`) in {Nil}");
+  expect(parser.results.length).toBe(1);
+  //TODO what was I actually planning to test here?
 })
 
 test('Basic Lookup (Coop new Syntax)', () => {
   parser.feed("new stdout(`rho:io:stdout`) in {Nil}");
+  expect(parser.results.length).toBe(1);
+  //TODO what was I actually planning to test here?
 })
 
 test.skip('Multiple Lookup', () => {
   parser.feed("lookup stdout(`rho:io:stdout`), stderr(`rho:io:stderr`) in {Nil}");
+  expect(parser.results.length).toBe(1);
+  //TODO what was I actually planning to test here?
 })
