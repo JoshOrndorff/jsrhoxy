@@ -34,9 +34,21 @@ test('Find comm given join', () => {
   vm.deploy(sendAst, 1);
   vm.deploy(send2Ast, 2);
 
-  const foundSends = findCommsFor(join, vm.sendsByChan());
+  // There should be one comm
+  const foundComms = findCommsFor(join, vm.sendsByChan());
+  expect(foundComms.length).toBe(1);
 
-  expect(foundSends[0]).toEqual([evaluateInEnvironment(sendAst, {})]);
+  // There should be one send in the comm
+  const foundSends = foundComms[0];
+  expect(foundSends.length).toBe(1);
+
+  // It should be the send we expected
+  const foundSend = foundSends[0];
+  const expected = evaluateInEnvironment(sendAst, {});
+
+  //TODO Figure out how to use .equals with jest
+  //expect(foundSend).toEqual(expected); // This one fails.
+  expect(foundSend.equals(expected)).toBe(true);
 });
 
 
