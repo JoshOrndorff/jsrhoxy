@@ -1,5 +1,5 @@
 const { nilAst, sendAst, send2Ast, forXAst } = require('./trees.js');
-const { evaluateInEnvironment, findSubCommsFor, findCommsFor } = require('../src/helpers.js');
+const { evaluateInEnvironment, findSubCommsFor, findCommsFor, structuralHash } = require('../src/helpers.js');
 const { Map, Set } = require('immutable');
 const rhoVM = require('../src/rhoVM.js');
 
@@ -21,10 +21,11 @@ test('evaluating does not mutate sends', () => {
   }
 });
 
-// evaluate in environment doesn't mutate joins
+//TODO evaluate in environment doesn't mutate joins
 
-// Same integers are structEquiv
-// Different integers are not struct equiv
+// TODO Above could/should be re-written in terms of objects coming back from
+// makeConcrete are frozen. Object.isFrozen(result)
+
 
 // Tests for finding Comms given a join
 test('Find comm given join', () => {
@@ -70,3 +71,31 @@ test('No subcomms 2', () => {
 
   expect(foundSends).toEqual(Set());
 });
+
+
+// Tests for structural equivalence
+test('Same integers are structurally equivalent', () => {
+  const i1 = {
+    tag: "ground",
+    type: "int",
+    value: 5
+  };
+  const i2 = { ...i1 };
+
+  expect(structuralHash(i1)).toBe(structuralHash(i2));
+})
+
+test('Different integers are NOTstructurally equivalent', () => {
+  const intTemplate = {
+    tag: "ground",
+    type: "int"
+  };
+  const i1 = { ...intTemplate, value: 5}
+  const i2 = { ...i1, value:6 };
+
+  expect(structuralHash(i1)).not.toBe(structuralHash(i2));
+})
+
+
+
+//TODO Tests for equals

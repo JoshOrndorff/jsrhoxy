@@ -7,7 +7,7 @@ module.exports = {
   mergeRandom, // re-export from jankyCrypto
   commable,
   structEquiv,
-  hashTerm,
+  structuralHash,
   findSubCommsFor,
   findCommsFor,
   prettyPrint,
@@ -82,8 +82,8 @@ function evaluateInEnvironment (term, env) {
   // Tack on the methods and return.
   return Object.freeze({
     ...result,
-    equals: (other) => (hashTerm(result) === hashTerm(other)) && result.randomState === other.randomState,
-    hashCode: () => hashTerm(result),
+    equals: (other) => (structuralHash(result) === structuralHash(other)) && result.randomState === other.randomState,
+    hashCode: () => structuralHash(result),
   });
 }
 
@@ -152,25 +152,29 @@ function subcommable(action, send) {
  * @return Boolean, whether a and b are structurally equivalent
  */
 function structEquiv(a, b) {
-  return hashTerm(a) === hashTerm(b);
+  return structuralHash(a) === structuralHash(b);
 }
 
 
 /**
- * Computes the hashcode of a given term for purposes
- * of using in immutable js libraries.
+ * Computes a hash for a rholang term. The hash is unique
+ * up to structural equivalence and thus is used to test for
+ * structural equivalence.
  *
- * Same hashcode means structurally equivalent
+ * Does not consider a term's random state, equals, hashCode, etc
  *
  * Terms being passed in here must be fully concrete so that
  * there are no free variable mentions.
+ *
+ * Seems like Kyle already thought about this:
+ * https://rchain.atlassian.net/wiki/spaces/RHOL/pages/215351798/Term+Normalization+and+Structural+Equivalence.
  * @param the term to hash
  * @return the hashcode (number? what type?)
  */
-function hashTerm(term) {
+function structuralHash(term) {
 
   if (term.tag === "bundle") {
-    return hashTerm(term.proc);
+    return structuralHash(term.proc);
   }
 
   // Hash of each AST is constructed from its tag and the "rest"
@@ -189,22 +193,22 @@ function hashTerm(term) {
       throw "hashing send* not yet implemented";
 
     case "send":
-      rest = hashTerm(term.chan) ^ (hashTerm(term.message) << 2);
+      rest = structuralHash(term.chan) ^ (structuralHash(term.message) << 2);
       break;
 
     case "join":
 
     case "join":
     // Consider the continuation
-    rest ^= hashTerm(term.body);
+    rest ^= structuralHash(term.body);
     // No break, so fall thorugh to remaining behavior that also applies to join*
 
     case "join*":
-      //TODO This might not be ideal If listening on the same channel twice,
+      //TODO This is broken. If listening on the same channel twice,
       // their hashes will cancel out. Bit-shifting isn't a great solution either
-      // because then commutativity is lost
+      // because then commutativity is lost. Normalization (link above)
       for (let action of term.actions) {
-        rest ^= hashTerm(action.chan) ^ hashTerm(action.pattern);
+        rest ^= structuralHash(action.chan) ^ structuralHash(action.pattern);
       }
 
       break;
@@ -225,7 +229,7 @@ function hashTerm(term) {
       break;
 
     default:
-      throw "Non-exhaustive pattern match in hashTerm: " + term.tag;
+      throw "Non-exhaustive pattern match in structuralHash: " + term.tag;
   }
 
   return (qdHash(term.tag) & rest);
