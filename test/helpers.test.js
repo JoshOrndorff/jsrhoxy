@@ -1,4 +1,4 @@
-const { nilAst, sendAst, send2Ast, forXAst } = require('./trees.js');
+const { nilAst, sendAst, send2Ast, forXAst, intAst } = require('./trees.js');
 const { evaluateInEnvironment, findSubCommsFor, findCommsFor, structuralHash } = require('../src/helpers.js');
 const { Map, Set } = require('immutable');
 const rhoVM = require('../src/rhoVM.js');
@@ -97,7 +97,7 @@ test('Same integers are structurally equivalent', () => {
   expect(structuralHash(i1)).toBe(structuralHash(i2));
 })
 
-test('Different integers are NOTstructurally equivalent', () => {
+test('Different integers are NOT structurally equivalent', () => {
   const intTemplate = {
     tag: "ground",
     type: "int"
@@ -108,6 +108,41 @@ test('Different integers are NOTstructurally equivalent', () => {
   expect(structuralHash(i1)).not.toBe(structuralHash(i2));
 })
 
+test('Unforgeables NOT structurally equivalent to ints', () => {
+  const template = {
+    tag: "ground",
+    value: 20,
+  };
+  const g1 = { ...template, type: "int"}
+  const g2 = { ...template, type: "unforgeable"};
 
+  expect(structuralHash(g1)).not.toBe(structuralHash(g2));
+})
 
-//TODO Tests for equals
+test('sends with different channels are not structequiv', () => {
+  const s1 = { tag: "send", chan: nilAst, message: nilAst};
+  const s2 = { tag: "send", chan: intAst, message: nilAst};
+
+  expect(structuralHash(s1)).not.toBe(structuralHash(s2));
+})
+
+test('sends with different messages are not structequiv', () => {
+  const s1 = { tag: "send", chan: nilAst, message: nilAst};
+  const s2 = { tag: "send", chan: nilAst, message: intAst};
+
+  expect(structuralHash(s1)).not.toBe(structuralHash(s2));
+})
+
+test('send and for not structequiv', () => {
+  expect(structuralHash(sendAst)).not.toBe(structuralHash(forXAst));
+})
+
+// Tests for equals
+test('Equals distinguishes randomState', () => {
+  let g1 = { ...nilAst, randomState: 1};
+  let g2 = { ...nilAst, randomState: 2};
+  g1 = evaluateInEnvironment(g1, {});
+
+  expect(structuralHash(g1)).toBe(structuralHash(g2));
+  expect(g1.equals(g2)).toBe(false);
+})

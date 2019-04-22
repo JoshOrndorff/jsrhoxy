@@ -232,7 +232,7 @@ function structuralHash(term) {
       throw "Non-exhaustive pattern match in structuralHash: " + term.tag;
   }
 
-  return (qdHash(term.tag) & rest);
+  return (qdHash(term.tag) ^ rest);
 }
 
 /**
