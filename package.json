@@ -18,6 +18,7 @@
   "author": "Joshy Orndorff",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "@types/node": "^12.0.2",
     "immutable": "^4.0.0-rc.12",
     "moo": "^0.5.0",
     "nearley": "^2.16.0",
