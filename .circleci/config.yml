@@ -1,0 +1,17 @@
+version: 2.0
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10.16.0
+
+    steps:
+      - checkout
+      # TODO build the grammar and typescript
+
+  test:
+    docker:
+      - image: circleci/node:10.16.0
+
+    steps:
+      - run: npm install
+      - run: npm test
