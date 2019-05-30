@@ -14,8 +14,6 @@ jobs:
       - image: circleci/node:10.16.0
 
     steps:
-      - checkout
-      - run: npm install
       - run: npm test
 # Now that I have workflows, the default job of "build" shouldn't auto-trigger
 workflows:
@@ -23,7 +21,8 @@ workflows:
   build-test:
     jobs:
       - build
-      # :
+      - test
+      # - build:
       #   filter:
       #     branches:
       #       ignore:
