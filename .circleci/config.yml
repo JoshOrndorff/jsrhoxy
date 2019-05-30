@@ -6,7 +6,8 @@ jobs:
 
     steps:
       - checkout
-      # TODO build the grammar and typescript
+      - run: npm install
+      - run: npm run compile-grammar
 
   test:
     docker:
