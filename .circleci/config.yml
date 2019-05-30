@@ -17,3 +17,11 @@ jobs:
       - checkout
       - run: npm install
       - run: npm test
+# Now that I have workflows, the default job of "build" shouldn't auto-trigger
+workflows:
+  build-and-test:
+    jobs:
+      - build
+      - test:
+        requires:
+          - build
