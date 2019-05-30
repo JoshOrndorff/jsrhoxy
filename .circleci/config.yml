@@ -19,6 +19,7 @@ jobs:
       - run: npm test
 # Now that I have workflows, the default job of "build" shouldn't auto-trigger
 workflows:
+  version: 2
   build-and-test:
     jobs:
       - build
