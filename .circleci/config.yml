@@ -16,18 +16,13 @@ jobs:
 
     steps:
       - run: npm test
+
 # Now that I have workflows, the default job of "build" shouldn't auto-trigger
-# workflows:
-#   version: 2
-#   build-test:
-#     jobs:
-#       - build
-#       - test
-      # - build:
-      #   filter:
-      #     branches:
-      #       ignore:
-      #         - bogus
-      # - test:
-      #   requires:
-      #     - build
+workflows:
+  version: 2
+  build-test:
+    jobs:
+      - build
+      - test:
+        requires:
+          - build
