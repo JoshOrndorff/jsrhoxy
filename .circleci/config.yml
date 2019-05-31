@@ -23,5 +23,6 @@ workflows:
     jobs:
       - build
       - test:
+          # TODO I have to use a workspace in between build and test steps
           requires:
             - build
