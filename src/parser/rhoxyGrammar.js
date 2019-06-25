@@ -135,20 +135,7 @@ var grammar = {
           givenName: n + ame.join('')
         }) },
     {"name": "main", "symbols": ["_", "proc", "_"], "postprocess": ([,p,]) => p},
-    {"name": "proc", "symbols": ["ground"], "postprocess": id},
-    {"name": "proc", "symbols": [{"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess": ([,,proc,,]) => (proc)},
-    {"name": "proc", "symbols": ["chan", "_", {"literal":"!"}, "_", {"literal":"("}, "_", "proc", "_", {"literal":")"}], "postprocess":  ([chan,,,,,,message,,]) => ({
-          tag: 'send',
-          chan,
-          message
-        }) },
-    {"name": "proc$string$1", "symbols": [{"literal":"f"}, {"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$1", "_", {"literal":"("}, "_", "actions", "_", {"literal":")"}, "_", {"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess":  ([,,,,actions,,,,,,body,,]) => ({
-          tag: 'join',
-          actions,
-          body
-        }) },
-    {"name": "proc", "symbols": ["proc", "_", {"literal":"|"}, "_", "proc"], "postprocess":  ([p1,,,,p2]) => {
+    {"name": "proc", "symbols": ["proc", "_", {"literal":"|"}, "_", "proc1"], "postprocess":  ([p1,,,,p2]) => {
           ps1 = p1.tag === "par" ? p1.procs : [p1]
           ps2 = p2.tag === "par" ? p2.procs : [p2]
           return {
@@ -156,30 +143,44 @@ var grammar = {
             procs: ps1.concat(ps2)
           }
         } },
-    {"name": "proc$string$2", "symbols": [{"literal":"b"}, {"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"l"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$2", "_", {"literal":"{"}, "proc", {"literal":"}"}], "postprocess":  ([,,,proc,]) => ({
+    {"name": "proc", "symbols": ["proc1"], "postprocess": ([p]) => p},
+    {"name": "proc1", "symbols": ["ground"], "postprocess": id},
+    {"name": "proc1", "symbols": [{"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess": ([,,proc,,]) => (proc)},
+    {"name": "proc1", "symbols": ["chan", "_", {"literal":"!"}, "_", {"literal":"("}, "_", "proc", "_", {"literal":")"}], "postprocess":  ([chan,,,,,,message,,]) => ({
+          tag: 'send',
+          chan,
+          message
+        }) },
+    {"name": "proc1$string$1", "symbols": [{"literal":"f"}, {"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc1", "symbols": ["proc1$string$1", "_", {"literal":"("}, "_", "actions", "_", {"literal":")"}, "_", {"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess":  ([,,,,actions,,,,,,body,,]) => ({
+          tag: 'join',
+          actions,
+          body
+        }) },
+    {"name": "proc1$string$2", "symbols": [{"literal":"b"}, {"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"l"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc1", "symbols": ["proc1$string$2", "_", {"literal":"{"}, "proc", {"literal":"}"}], "postprocess":  ([,,,proc,]) => ({
           tag: "bundle",
           proc
         }) },
-    {"name": "proc$string$3", "symbols": [{"literal":"n"}, {"literal":"e"}, {"literal":"w"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc$string$4", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["proc$string$3", "__", "variables", "__", "proc$string$4", "_", "proc"], "postprocess":  ([,,vars,,,,body]) => ({
+    {"name": "proc1$string$3", "symbols": [{"literal":"n"}, {"literal":"e"}, {"literal":"w"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc1$string$4", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc1", "symbols": ["proc1$string$3", "__", "variables", "__", "proc1$string$4", "_", "proc"], "postprocess":  ([,,vars,,,,body]) => ({
             tag: "new",
             vars,
             body
         }) },
-    {"name": "proc$string$5", "symbols": [{"literal":"("}, {"literal":"`"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc$string$6", "symbols": [{"literal":"`"}, {"literal":")"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc$string$7", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "proc", "symbols": ["lookup", "__", "variable", "proc$string$5", "uri", "proc$string$6", "_", "proc$string$7", "_", "proc"], "postprocess":  ([,,v,,uri,,,,,body]) => ({
+    {"name": "proc1$string$5", "symbols": [{"literal":"("}, {"literal":"`"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc1$string$6", "symbols": [{"literal":"`"}, {"literal":")"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc1$string$7", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "proc1", "symbols": ["lookup", "__", "variable", "proc1$string$5", "uri", "proc1$string$6", "_", "proc1$string$7", "_", "proc"], "postprocess":  ([,,v,,uri,,,,,body]) => ({
           tag: "lookup",
           v,
           uri,
           body
         }) },
-    {"name": "proc$ebnf$1", "symbols": [{"literal":"*"}]},
-    {"name": "proc$ebnf$1", "symbols": ["proc$ebnf$1", {"literal":"*"}], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "proc", "symbols": ["proc$ebnf$1", "variable"], "postprocess": ([,v]) => v},
+    {"name": "proc1$ebnf$1", "symbols": [{"literal":"*"}]},
+    {"name": "proc1$ebnf$1", "symbols": ["proc1$ebnf$1", {"literal":"*"}], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "proc1", "symbols": ["proc1$ebnf$1", "variable"], "postprocess": ([,v]) => v},
     {"name": "uri$ebnf$1", "symbols": []},
     {"name": "uri$ebnf$1", "symbols": ["uri$ebnf$1", /[a-zA-Z0-9:]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "uri", "symbols": ["uri$ebnf$1"], "postprocess": ([l]) => l.join('')},
