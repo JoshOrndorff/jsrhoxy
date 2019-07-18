@@ -5,7 +5,7 @@
 # Apparently, the top-level thing should always be the first parse rule
 main -> _ proc _ {% ([,p,]) => p %}
 
-proc -> proc _ "|" _ proc1 {% ([p1,,,,p2]) => {
+proc -> proc1 _ "|" _ proc {% ([p1,,,,p2]) => {
     ps1 = p1.tag === "par" ? p1.procs : [p1]
     ps2 = p2.tag === "par" ? p2.procs : [p2]
     return {
@@ -18,7 +18,7 @@ proc -> proc _ "|" _ proc1 {% ([p1,,,,p2]) => {
 proc1 ->
     ground {% id %}
   | "{" _ proc _ "}"  {% ([,,proc,,]) => (proc) %}
-  | chan _ "!" _ "(" _ proc _ ")"
+  | proc _ "!" _ "(" _ proc _ ")"
       {% ([chan,,,,,,message,,]) => ({
         tag: 'send',
         chan,
@@ -59,8 +59,6 @@ uri -> [a-zA-Z0-9:]:* {% ([l]) => l.join('') %}
 
 lookup -> "new" | "lookup" {% (d) => null %}
 
-chan -> "@" proc {% ([,c]) => c %}
-
 
 actions ->
     action # Don't manually put this in a list {% d => [d] %}
@@ -71,7 +69,7 @@ actions ->
        %}
 
 
-action -> pattern _ "<-" _ chan
+action -> pattern _ "<-" _ proc
   {% ([pattern,,,,chan]) => ({
     tag: "action",
     pattern,

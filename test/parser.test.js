@@ -105,14 +105,14 @@ test('false', () => {
 
 // Tests for send parser
 test('Basic Send', () => {
-  parser.feed("@Nil!(Nil)");
+  parser.feed("Nil!(Nil)");
 
   expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(sendAst);
 });
 
 test('Send w/ grounds', () => {
-  parser.feed("@4 ! (false)");
+  parser.feed("4 ! (false)");
 
   const expected = {
     tag: "send",
@@ -134,13 +134,13 @@ test('Send w/ grounds', () => {
 
 // Tests for join parser
 test('Basic Receive', () => {
-  parser.feed("for(x <- @Nil){Nil}");
+  parser.feed("for(x <- Nil){Nil}");
 
   expect(parser.results[0]).toEqual(forXAst);
 });
 
 test('two-action join', () => {
-  parser.feed("for(x <- @Nil ; y <- @Nil){Nil}");
+  parser.feed("for(x <- Nil ; y <- Nil){Nil}");
 
   const expected = {
     tag: "join",
@@ -186,7 +186,7 @@ test('Basic Par', () => {
 });
 
 test('Send | Nil', () => {
-  parser.feed("@Nil!(Nil)|Nil");
+  parser.feed("Nil!(Nil)|Nil");
 
   const expected = {
     tag: "par",
@@ -278,7 +278,7 @@ test('Comment 2', () => {
 });
 
 test('Comment 3', () => {
-  parser.feed("@Nil/**/!(/**/Nil)//dasfasdf\n/**/");
+  parser.feed("Nil/**/!(/**/Nil)//dasfasdf\n/**/");
 
   expect(parser.results.length).toBe(1);
   expect(parser.results[0]).toEqual(sendAst);

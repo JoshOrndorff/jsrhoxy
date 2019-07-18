@@ -135,7 +135,7 @@ var grammar = {
           givenName: n + ame.join('')
         }) },
     {"name": "main", "symbols": ["_", "proc", "_"], "postprocess": ([,p,]) => p},
-    {"name": "proc", "symbols": ["proc", "_", {"literal":"|"}, "_", "proc1"], "postprocess":  ([p1,,,,p2]) => {
+    {"name": "proc", "symbols": ["proc1", "_", {"literal":"|"}, "_", "proc"], "postprocess":  ([p1,,,,p2]) => {
           ps1 = p1.tag === "par" ? p1.procs : [p1]
           ps2 = p2.tag === "par" ? p2.procs : [p2]
           return {
@@ -146,7 +146,7 @@ var grammar = {
     {"name": "proc", "symbols": ["proc1"], "postprocess": ([p]) => p},
     {"name": "proc1", "symbols": ["ground"], "postprocess": id},
     {"name": "proc1", "symbols": [{"literal":"{"}, "_", "proc", "_", {"literal":"}"}], "postprocess": ([,,proc,,]) => (proc)},
-    {"name": "proc1", "symbols": ["chan", "_", {"literal":"!"}, "_", {"literal":"("}, "_", "proc", "_", {"literal":")"}], "postprocess":  ([chan,,,,,,message,,]) => ({
+    {"name": "proc1", "symbols": ["proc", "_", {"literal":"!"}, "_", {"literal":"("}, "_", "proc", "_", {"literal":")"}], "postprocess":  ([chan,,,,,,message,,]) => ({
           tag: 'send',
           chan,
           message
@@ -188,13 +188,12 @@ var grammar = {
     {"name": "lookup", "symbols": ["lookup$string$1"]},
     {"name": "lookup$string$2", "symbols": [{"literal":"l"}, {"literal":"o"}, {"literal":"o"}, {"literal":"k"}, {"literal":"u"}, {"literal":"p"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "lookup", "symbols": ["lookup$string$2"], "postprocess": (d) => null},
-    {"name": "chan", "symbols": [{"literal":"@"}, "proc"], "postprocess": ([,c]) => c},
     {"name": "actions", "symbols": ["action"]},
     {"name": "actions", "symbols": ["actions", "_", {"literal":";"}, "_", "action"], "postprocess":  ([actions,,,,action]) =>
         actions.concat([action])
                },
     {"name": "action$string$1", "symbols": [{"literal":"<"}, {"literal":"-"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "action", "symbols": ["pattern", "_", "action$string$1", "_", "chan"], "postprocess":  ([pattern,,,,chan]) => ({
+    {"name": "action", "symbols": ["pattern", "_", "action$string$1", "_", "proc"], "postprocess":  ([pattern,,,,chan]) => ({
           tag: "action",
           pattern,
           chan
