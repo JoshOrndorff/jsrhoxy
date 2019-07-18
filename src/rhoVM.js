@@ -144,7 +144,7 @@ function fresh(ffis) {
       //TODO loop through the various lookups
       // Right now only a single lookup is supported
       //for () {
-        env.set(term.v.givenName,registry.get(term.uri));
+        env = env.set(term.v.givenName,registry.get(term.uri));
       //}
       deployTerm = term.body;
     }

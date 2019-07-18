@@ -126,6 +126,8 @@ test('Par in a multi-action join', () => {
   expect(vm.joinsByChan().count()).toEqual(2);
 });
 
+//TODO Par in partially-overlapping joins
+
 test('Par in a bound variable', () => {
 
   //new x in { x }
@@ -149,4 +151,28 @@ test('Par in an unbound variable', () => {
   }).toThrow("Variable y not bound in environment");
 });
 
-//TODO Par in partially-overlapping joins
+
+// Ensure that after parring in a `new` the environment is actually updated
+// By the time the join goes into the tuplespace, it is already concrete
+// and has no environment. Have to think more about how to test thist.
+// test('Environment updates on new', () => {
+//   // Deploy new a in {for( x <- Nil){Nil}}
+//   const term = {
+//     tag: "new",
+//     vars: [
+//       {
+//         tag: "variable",
+//         givenName: "a"
+//       }
+//     ],
+//     body: forXAst
+//   }
+//   vm.deploy(term, 123);
+//
+//   // Grab the join from the tuplespace
+//   expect(vm.joinsByChan().count()).toEqual(1);
+//   let grabbedJoin = vm.getArbitraryJoin();
+//
+//   // Ensure it's environment contains a
+//   expect(grabbedJoin.env.has("a")).toBe(true);
+// });
