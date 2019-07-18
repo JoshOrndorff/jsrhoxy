@@ -1,7 +1,7 @@
 const { List } = require("immutable");
 const rhoVM = require('../src/rhoVM.js');
 const { evaluateInEnvironment } = require('../src/helpers.js');
-const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst } = require('./trees.js');
+const { nilAst, intAst, sendAst, send2Ast, forXAst, forXyAst, newXInXAst } = require('./trees.js');
 
 let vm;
 beforeEach(() => {
@@ -126,4 +126,27 @@ test('Par in a multi-action join', () => {
   expect(vm.joinsByChan().count()).toEqual(2);
 });
 
-// Par in partially-overlapping joins
+test('Par in a bound variable', () => {
+
+  //new x in { x }
+  vm.deploy(newXInXAst, 123);
+
+  expect(vm.sendsByChan().count()).toEqual(0);
+  expect(vm.joinsByChan().count()).toEqual(0);
+});
+
+test('Par in an unbound variable', () => {
+
+  //new x in { y }
+  let newXInY = {...newXInXAst};
+  newXInY.body = {
+    tag: "variable",
+    givenName: "y"
+  }
+
+  expect(() => {
+    vm.deploy(newXInY, 123);
+  }).toThrow("Variable y not bound in environment");
+});
+
+//TODO Par in partially-overlapping joins

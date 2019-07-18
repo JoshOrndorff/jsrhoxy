@@ -61,9 +61,25 @@ const forXyAst = {
   body: nilAst,
 };
 
+// new x in { x }
+const newXInXAst = {
+  tag: "new",
+  vars: [
+    {
+      tag: "variable",
+      givenName: "x"
+    }
+  ],
+  body: {
+    tag: "variable",
+    givenName: "x"
+  }
+};
+
 module.exports.nilAst = nilAst;
 module.exports.intAst = intAst;
 module.exports.sendAst = sendAst;
 module.exports.send2Ast = send2Ast;
 module.exports.forXAst = forXAst;
 module.exports.forXyAst = forXyAst;
+module.exports.newXInXAst = newXInXAst;

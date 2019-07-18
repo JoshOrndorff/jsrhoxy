@@ -44,7 +44,7 @@ function fresh(ffis) {
 
     // Need some initial random state, may as well use the first index in the proc.
     // Add 1000 to avoid confilct with hardcoded randomStates used for tests right now.
-    parIn(ffi, {}, 1000 + i);
+    parIn(ffi, Map(), 1000 + i);
     i += 1;
   }
 
@@ -138,12 +138,13 @@ function fresh(ffis) {
    */
   function deploy(term, seed) {
     // Registry lookups only happen at the topmost level so handle them here
-    let env = {};
+    let env = Map();
     let deployTerm = term;
     if (term.tag === "lookup") {
       //TODO loop through the various lookups
+      // Right now only a single lookup is supported
       //for () {
-        env[term.v.givenName] = registry.get(term.uri);
+        env.set(term.v.givenName,registry.get(term.uri));
       //}
       deployTerm = term.body;
     }
@@ -155,7 +156,8 @@ function fresh(ffis) {
   /**
    * Update the tuplespace by parring in a term
    * @param term An AST of the term to be parred in
-   * @param env The environment in which the term should be evaluated.
+   * @param env Environment in which the term should be evaluated.
+   *            An immutable Map of bindings variableName => Process
    * @param randomState Random state (integer) for the term.
    */
   function parIn(term, env, randomState) {
@@ -165,7 +167,7 @@ function fresh(ffis) {
         break;
 
       case "bundle":
-        parIn(randomState, term.proc);
+        parIn(term.proc, env, randomState);
         break;
 
       case "send*": // For FFIs akin stdout (maybe date or entropy)
@@ -206,19 +208,35 @@ function fresh(ffis) {
 
 
       case "new": {
-        let newBindings = {};
+        let newBindings = Map();
         const vs = term.vars;
+        // Split state into one value per bound variable, and one more for recursion
         let nextStates = splitRandom(randomState, vs.length + 1);
         for (let i = 0; i < vs.length; i++) {
-          newBindings[vs[i]] = {
+          newBindings = newBindings.set(vs[i].givenName, {
             tag: "ground",
             type: "unforgeable",
             value: nextStates[i],
-          };
+          });
         }
 
+
         // Then recurse adding those bindings to the environment
-        return parIn(term.body, {...env, ...newBindings}, nextStates[vs.length]);
+        parIn(term.body, env.merge(newBindings), nextStates[vs.length]);
+        break;
+      }
+
+      case "variable": {
+        // When evaluating a variable, grab the process from the environment
+        // and par it in
+
+        let proc = env.get(term.givenName);
+        if (!proc) {
+          throw `Variable ${term.givenName} not bound in environment`;
+        }
+
+        parIn(proc, env.delete(term.givenName), randomState);
+        break;
       }
 
       default:
@@ -271,7 +289,7 @@ function fresh(ffis) {
     else {
       // Add the new stuff into the tuplespace
       // Merge objects with spread operator https://stackoverflow.com/a/171256/4184410
-      parIn(commJoin.body, {...commJoin.environment, ...bindings}, newRandom);
+      parIn(commJoin.body, commJoin.environment.merge(bindings), newRandom);
     }
   }
 }
