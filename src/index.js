@@ -1,3 +1,8 @@
+// rename this file to rhoxy.js
+// or something like that
+// There can be another rhoxy-service or rhoxyd or something for
+// a persisten tuplespace
+
 const nearley = require("nearley");
 const grammar = require("./parser/rhoxyGrammar.js");
 const rhoVM = require('./rhoVM.js');
