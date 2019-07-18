@@ -20,7 +20,7 @@ module.exports = {
  * insertion into the tuplespace, and the AST will be (shallow) frozen.
  *
  * @param term The term to be made concrete
- * @param env The environment bindings to use
+ * @param env The environment bindings to use: an immutable Map
  * @return Concrete AST with .hashCode method
  */
 function evaluateInEnvironment (term, env) {
@@ -33,7 +33,7 @@ function evaluateInEnvironment (term, env) {
       break;
 
     case "variable": {
-      result = env[term.givenName];
+      result = env.get(term.givenName);
       break;
     }
 
