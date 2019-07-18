@@ -163,8 +163,8 @@ function structEquiv(a, b) {
  *
  * Does not consider a term's random state, equals, hashCode, etc
  *
- * Terms being passed in here must be fully concrete so that
- * there are no free variable mentions.
+ * Terms being passed in here must be fully concrete. In the case
+ * of joins that means that every free name occurs in the environment.
  *
  * Seems like Kyle already thought about this:
  * https://rchain.atlassian.net/wiki/spaces/RHOL/pages/215351798/Term+Normalization+and+Structural+Equivalence.
@@ -173,66 +173,81 @@ function structEquiv(a, b) {
  */
 function structuralHash(term) {
 
-  if (term.tag === "bundle") {
-    return structuralHash(term.proc);
+  // The outer function does not take an environment.
+  // Start recursing with an empty environment.
+  return innerStructuralHash(term, Map());
+
+  /**
+   * An inner helper function that propagates an environment downward
+   */
+  function innerStructuralHash(term, env) {
+
+    if (term.tag === "bundle") {
+      return innerStructuralHash(term.proc, env);
+    }
+
+    // Hash of each AST is constructed from its tag and the "rest"
+    // Rest depends on what type of AST we have.
+    let rest;
+
+    switch (term.tag) {
+
+      case "ground":
+        // Instantiated unforgeables are equivalent iff they have same randomState
+        // See case "new" for internally-bound unforgeables.
+        rest = qdHash(term.type) ^ qdHash(term.value);
+        break;
+
+      case "send*":
+        throw "hashing send* not yet implemented";
+
+      case "send":
+        rest = innerStructuralHash(term.chan, env) ^ (innerStructuralHash(term.message, env) << 2);
+        break;
+
+      case "join":
+      // Consider the continuation for proper joins (not join*s)
+      // Merge this join's environment, shadowing as necessary
+      rest = innerStructuralHash(term.body, env.merge(term.environment));
+      // No break, so fall thorugh to remaining behavior that also applies to join*
+
+      case "join*":
+        //TODO This is broken. If listening on the same channel twice,
+        // their hashes will cancel out. Bit-shifting isn't a great solution either
+        // because then commutativity is lost. Normalization (link above)
+        for (let action of term.actions) {
+          rest ^= innerStructuralHash(action.chan, env) ^ innerStructuralHash(action.pattern, env);
+        }
+
+        break;
+
+      case "par":
+        throw "hashing par not yet implemented";
+
+      case "new":
+        // Bound unforgeables are inside. Rather than implementing additional logic
+        // to do debruijn indices or maintain a map, Can we somehow start it with a
+        // standard random State so that it will always hash the same.
+        throw "hashing new not yet implemented";
+
+      // Patterns need not be evaluated
+      // Actually, why did this ever come up
+      case "variableP":
+        rest = 0;
+        break;
+
+      case "variable":
+        // A variable always points to a fully concrete term,
+        // so the environment we pass is irrelevant
+        rest = innerStructuralHash(env.get(term.givenName), Map());
+        break;
+
+      default:
+        throw "Non-exhaustive pattern match in structuralHash: " + term.tag;
+    }
+
+    return (qdHash(term.tag) ^ rest);
   }
-
-  // Hash of each AST is constructed from its tag and the "rest"
-  // Rest depends on what type of AST we have.
-  let rest;
-
-  switch (term.tag) {
-
-    case "ground":
-      // Instantiated unforgeables are equivalent iff they have same randomState
-      // See case "new" for internally-bound unforgeables.
-      rest = qdHash(term.type) ^ qdHash(term.value);
-      break;
-
-    case "send*":
-      throw "hashing send* not yet implemented";
-
-    case "send":
-      rest = structuralHash(term.chan) ^ (structuralHash(term.message) << 2);
-      break;
-
-    case "join":
-
-    case "join":
-    // Consider the continuation
-    rest ^= structuralHash(term.body);
-    // No break, so fall thorugh to remaining behavior that also applies to join*
-
-    case "join*":
-      //TODO This is broken. If listening on the same channel twice,
-      // their hashes will cancel out. Bit-shifting isn't a great solution either
-      // because then commutativity is lost. Normalization (link above)
-      for (let action of term.actions) {
-        rest ^= structuralHash(action.chan) ^ structuralHash(action.pattern);
-      }
-
-      break;
-
-    case "par":
-      throw "hashing par not yet implemented";
-
-    case "new":
-      // Bound unforgeables are inside. Rather than implementing additional logic
-      // to do debruijn indices or maintain a map, Can we somehow start it with a
-      // standard random State so that it will always hash the same.
-      throw "hashing new not yet implemented";
-
-    // Patterns need not be evaluated
-    // Actually, why did this ever come up
-    case "variableP":
-      rest = 0;
-      break;
-
-    default:
-      throw "Non-exhaustive pattern match in structuralHash: " + term.tag;
-  }
-
-  return (qdHash(term.tag) ^ rest);
 }
 
 /**
