@@ -1,0 +1,42 @@
+version: 2.0
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10.16.0
+
+    steps:
+      - checkout
+      - run:
+          name: Installing npm dependencies
+          command: npm install
+      - run:
+          name: Compiling Nearley Grammar
+          command: npm run compile-grammar
+      - run:
+          name: Jest tests
+          command: npm test
+
+
+  # test:
+  #   docker:
+  #     - image: circleci/node:10.16.0
+  #
+  #   steps:
+  #     #TODO any typescript stuff I end up using
+  #     - run: npm test
+
+# TODO Seperate build and test into two jobs
+# But it requires a workspace. Haven't gotten there yet.
+workflows:
+  version: 2
+  simple:
+    jobs:
+      - build
+
+  # build-test:
+  #   jobs:
+  #     - build
+  #     - test:
+  #         # TODO I have to use a workspace in between build and test steps
+  #         requires:
+  #           - build
